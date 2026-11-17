@@ -11,8 +11,8 @@ permissions:
 env:
   PCSX_SHA: 7b0e8f8fadfbce3d170d195b9d9eecaabfa08c8e
   # what the test job does this time
-  RUN_TIMING: 0
-  RUN_PROFILE: 1
+  RUN_TIMING: 1
+  RUN_PROFILE: 0
   PROFILE_ONLY: p_balls p_n00bdemo p_fpscam
 
 jobs:
@@ -48,6 +48,10 @@ jobs:
           - name: patched-3ds
             patch: 1
             azahar: 0
+          - name: prof-azahar
+            patch: 0
+            azahar: 1
+            prof: 1
     steps:
     - uses: actions/checkout@v4
     - name: Build (${{ matrix.name }})
@@ -66,6 +70,9 @@ jobs:
         if [ "$AZAHAR" = "1" ]; then
           python3 /w/.github/pcsx-test/azahar_variant.py .
         fi
+        if [ "$PROF" = "1" ]; then
+          python3 /w/.github/pcsx-test/prof_variant.py .
+        fi
         git diff --stat
         make -f Makefile.libretro platform=ctr -j$(getconf _NPROCESSORS_ONLN)
         cp pcsx_rearmed_libretro_ctr.a /w/libretro_ctr.a
@@ -83,7 +90,7 @@ jobs:
         ls -la out
         SCRIPT
         docker run --rm --user root -v "$PWD:/w" -w /w \
-          -e PATCH=${{ matrix.patch }} -e AZAHAR=${{ matrix.azahar }} -e NAME=${{ matrix.name }} -e PCSX_SHA \
+          -e PATCH=${{ matrix.patch }} -e AZAHAR=${{ matrix.azahar }} -e NAME=${{ matrix.name }} -e PROF=${{ matrix.prof }} -e PCSX_SHA \
           reallibretroretroarch/libretro-build-devkitpro:latest bash /w/build.sh
     - uses: actions/upload-artifact@v4
       with:
@@ -98,12 +105,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - variant: original-azahar
+          - variant: prof-azahar
             tag: ''
-          - variant: patched-azahar
-            tag: ''
-          - variant: original-azahar
-            tag: -run2
     steps:
     - uses: actions/checkout@v4
     - uses: actions/download-artifact@v4
@@ -143,6 +146,8 @@ jobs:
           done
         fi
         cat results/summary_*.txt || true
+        grep -h -A9 'PROF per-frame' results/*/*/retroarch.log /dev/null | sed 's/^\[libretro INFO\] //' || true
+        for f in results/*/*/retroarch.log; do echo "== $f"; grep 'PROF' "$f" | sed 's/^\[libretro INFO\] //'; done
     - uses: actions/upload-artifact@v4
       if: always()
       with:
