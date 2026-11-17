@@ -105,7 +105,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - variant: prof-azahar
+          - variant: original-azahar
+            tag: ''
+          - variant: patched-azahar
             tag: ''
     steps:
     - uses: actions/checkout@v4
@@ -153,6 +155,20 @@ jobs:
       with:
         name: results-${{ matrix.variant }}${{ matrix.tag }}
         path: results/
+
+  compare:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/download-artifact@v4
+      with:
+        path: r
+        pattern: results-*
+        merge-multiple: true
+    - name: Compare original and patched
+      run: python3 .github/pcsx-test/compare_frames.py r original-azahar patched-azahar | tee r/compare.txt
 
   # Test-only transport: artifact storage isn't reachable from where the
   # builds get tested, so put them on a throwaway orphan branch.
