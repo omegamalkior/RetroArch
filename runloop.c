@@ -11475,7 +11475,19 @@ bool core_run(void)
        * frame, the video thread's between frames. */
       video_thread_core_context_take();
 #endif
+#ifdef GPSP_AZAHAR_TEST
+      {
+         extern void gat_run_begin(void);
+         gat_run_begin();
+      }
+#endif
       current_core->retro_run();
+#ifdef GPSP_AZAHAR_TEST
+      {
+         extern void gat_run_end(void);
+         gat_run_end();
+      }
+#endif
 #ifdef HAVE_THREADS
       video_thread_core_context_release();
 #endif

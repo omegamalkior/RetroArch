@@ -18,17 +18,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [original, patched]
+        include:
+          - name: original-azahar
+            patch: 0
+            azahar: 1
+          - name: patched-azahar
+            patch: 1
+            azahar: 1
+          - name: patched-3ds
+            patch: 1
+            azahar: 0
     steps:
     - uses: taiki-e/checkout-action@v1
 
-    - name: Build gpSP core (${{ matrix.variant }})
+    - name: Build gpSP core (${{ matrix.name }})
       run: |
         git clone https://github.com/libretro/gpsp.git /tmp/gpsp
         cd /tmp/gpsp
         git checkout 5819380
-        if [ "${{ matrix.variant }}" = "patched" ]; then
+        if [ "${{ matrix.patch }}" = "1" ]; then
           git apply "$GITHUB_WORKSPACE/.github/gpsp-test/gpsp-arm-dynarec-speedups.patch"
+        fi
+        if [ "${{ matrix.azahar }}" = "1" ]; then
+          python3 "$GITHUB_WORKSPACE/.github/gpsp-test/azahar_variant.py" .
         fi
         git diff --stat
         make platform=ctr CTRULIB="$DEVKITPRO/libctru" -j$(getconf _NPROCESSORS_ONLN)
@@ -36,14 +48,19 @@ jobs:
 
     - name: Build RetroArch 3DS with gpSP
       run: |
-        make -f Makefile.ctr -j$(getconf _NPROCESSORS_ONLN) USE_CTRULIB_2=1 LIBRETRO=gpsp clean
-        make -f Makefile.ctr -j$(getconf _NPROCESSORS_ONLN) USE_CTRULIB_2=1 LIBRETRO=gpsp
+        if [ "${{ matrix.azahar }}" = "1" ]; then
+          EXTRA="GPSP_AZAHAR_TEST=1 GPSP_TEST_VARIANT=${{ matrix.name }} APP_USE_SVCHAX=0"
+        else
+          EXTRA=""
+        fi
+        make -f Makefile.ctr -j$(getconf _NPROCESSORS_ONLN) USE_CTRULIB_2=1 LIBRETRO=gpsp $EXTRA clean
+        make -f Makefile.ctr -j$(getconf _NPROCESSORS_ONLN) USE_CTRULIB_2=1 LIBRETRO=gpsp $EXTRA
         mkdir -p out
-        cp retroarch_3ds.cia out/gpsp_libretro_${{ matrix.variant }}.cia
-        cp retroarch_3ds.3dsx out/gpsp_libretro_${{ matrix.variant }}.3dsx
+        cp retroarch_3ds.3dsx out/gpsp_${{ matrix.name }}.3dsx
+        cp retroarch_3ds.cia out/gpsp_${{ matrix.name }}.cia
         ls -la out
 
     - uses: actions/upload-artifact@v4
       with:
-        name: gpsp-3ds-${{ matrix.variant }}
+        name: gpsp-${{ matrix.name }}
         path: out/

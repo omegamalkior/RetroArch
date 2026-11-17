@@ -7572,6 +7572,31 @@ int main(int argc, char *argv[])
    if (argc == 2 && winusb_bind_command(argv[1], &ret))
       return ret;
 #endif
+#ifdef GPSP_AZAHAR_TEST
+   /* Test-only: load the content listed in autoload.txt */
+   if (argc <= 1)
+   {
+      static char gat_path[512];
+      static char *gat_argv[3];
+      FILE *f = fopen("sdmc:/retroarch/e2e/autoload.txt", "r");
+      if (f)
+      {
+         if (fgets(gat_path, sizeof(gat_path), f))
+         {
+            size_t len = strlen(gat_path);
+            while (len && (gat_path[len - 1] == '\n'
+                     || gat_path[len - 1] == '\r'))
+               gat_path[--len] = '\0';
+            gat_argv[0] = (char*)"sdmc:/retroarch/retroarch.3dsx";
+            gat_argv[1] = gat_path;
+            gat_argv[2] = NULL;
+            argc        = 2;
+            argv        = gat_argv;
+         }
+         fclose(f);
+      }
+   }
+#endif
    return rarch_main(argc, argv, NULL);
 }
 #endif

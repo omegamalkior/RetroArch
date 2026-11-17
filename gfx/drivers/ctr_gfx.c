@@ -2175,6 +2175,96 @@ static bool ctr_get_current_software_framebuffer(void *data,
    return true;
 }
 
+#ifdef GPSP_AZAHAR_TEST
+#include <sys/stat.h>
+/* Test-only instrumentation (Azahar gpSP comparison). Times retro_run in
+ * emulated ARM11 ticks and dumps some frames to the SD card. */
+#ifndef GPSP_TEST_VARIANT
+#define GPSP_TEST_VARIANT "unknown"
+#endif
+#define GAT_DIR "sdmc:/retroarch/e2e/out_" GPSP_TEST_VARIANT
+#define GAT_LAST_FRAME 2400
+static FILE *gat_log         = NULL;
+static u64 gat_t0            = 0;
+static u64 gat_win_run       = 0;
+static u64 gat_total_run     = 0;
+static u64 gat_win_start     = 0;
+static u64 gat_measure_run   = 0;
+static unsigned gat_frames   = 0;
+static bool gat_done         = false;
+
+void gat_run_begin(void)
+{
+   if (!gat_log && !gat_done)
+   {
+      mkdir("sdmc:/retroarch/e2e", 0777);
+      mkdir(GAT_DIR, 0777);
+      gat_log = fopen(GAT_DIR "/log.txt", "w");
+      if (gat_log)
+      {
+         fprintf(gat_log, "variant %s\n", GPSP_TEST_VARIANT);
+         fflush(gat_log);
+      }
+      gat_win_start = svcGetSystemTick();
+   }
+   gat_t0 = svcGetSystemTick();
+}
+
+void gat_run_end(void)
+{
+   u64 d = svcGetSystemTick() - gat_t0;
+   if (gat_done || !gat_log)
+      return;
+   gat_frames++;
+   gat_win_run   += d;
+   gat_total_run += d;
+   /* The first 10 seconds include translation of new code */
+   if (gat_frames > 600)
+      gat_measure_run += d;
+   if ((gat_frames % 60) == 0)
+   {
+      u64 now = svcGetSystemTick();
+      fprintf(gat_log, "frame %u run_ticks_per_frame %llu window_ticks %llu\n",
+            gat_frames, (unsigned long long)(gat_win_run / 60),
+            (unsigned long long)(now - gat_win_start));
+      fflush(gat_log);
+      gat_win_run   = 0;
+      gat_win_start = now;
+   }
+   if (gat_frames == GAT_LAST_FRAME)
+   {
+      fprintf(gat_log, "DONE frames %u avg_run_ticks_per_frame_after_600 %llu avg_all %llu\n",
+            gat_frames,
+            (unsigned long long)(gat_measure_run / (GAT_LAST_FRAME - 600)),
+            (unsigned long long)(gat_total_run / gat_frames));
+      fclose(gat_log);
+      gat_log  = NULL;
+      gat_done = true;
+   }
+}
+
+static void gat_dump_frame(const void *frame, unsigned width,
+      unsigned height, unsigned pitch)
+{
+   char name[128];
+   FILE *f;
+   unsigned y;
+   if (gat_done || !frame || frame == RETRO_HW_FRAME_BUFFER_VALID)
+      return;
+   if (     gat_frames != 300  && gat_frames != 900
+         && gat_frames != 1500 && gat_frames != 2100
+         && gat_frames != 2399)
+      return;
+   snprintf(name, sizeof(name), GAT_DIR "/f%u_%ux%u.raw",
+         gat_frames, width, height);
+   if (!(f = fopen(name, "wb")))
+      return;
+   for (y = 0; y < height; y++)
+      fwrite((const u8*)frame + y * pitch, 2, width, f);
+   fclose(f);
+}
+#endif
+
 static bool ctr_frame(void* data, const void* frame,
       unsigned dims,
       uint64_t frame_count,
@@ -2212,6 +2302,10 @@ static bool ctr_frame(void* data, const void* frame,
    bool lcd_bottom                = false;
    bool views                     = false;
    uint32_t flags                 = runloop_get_flags();
+
+#ifdef GPSP_AZAHAR_TEST
+   gat_dump_frame(frame, width, height, pitch);
+#endif
 
    if (!width || !height || !settings)
    {
