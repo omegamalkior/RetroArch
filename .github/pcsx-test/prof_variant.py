@@ -37,8 +37,8 @@ static unsigned frames;
 
 static int on_main(void) { return threadGetCurrent() == NULL; }
 
-u64 prof3ds_gcmd_ticks[256], prof3ds_spr_ticks[512];
-u32 prof3ds_gcmd_cnt[256], prof3ds_spr_cnt[512];
+u64 prof3ds_gcmd_ticks[256], prof3ds_spr_ticks[512], prof3ds_poly_ticks[1024];
+u32 prof3ds_gcmd_cnt[256], prof3ds_spr_cnt[512], prof3ds_poly_cnt[1024], prof3ds_poly_idx;
 
 static void report_gpu(void)
 {
@@ -65,6 +65,18 @@ static void report_gpu(void)
       if (bi < 0) break;
       used[bi] = 1;
       SysPrintf("PROFG sprite drv %03x %9llu  n/frame %u\n", bi, best / 1800, prof3ds_spr_cnt[bi] / 1800);
+   }
+   {
+      static u8 pused[1024];
+      memset(pused, 0, sizeof(pused));
+      for (k = 0; k < 10; k++) {
+         best = 0; bi = -1;
+         for (i = 0; i < 1024; i++)
+            if (!pused[i] && prof3ds_poly_ticks[i] > best) { best = prof3ds_poly_ticks[i]; bi = i; }
+         if (bi < 0) break;
+         pused[bi] = 1;
+         SysPrintf("PROFG poly drv %03x %9llu  n/frame %u\n", bi, best / 1800, prof3ds_poly_cnt[bi] / 1800);
+      }
    }
 }
 
@@ -101,6 +113,8 @@ void prof3ds_run_end(void)
       memset(prof3ds_gcmd_cnt, 0, sizeof(prof3ds_gcmd_cnt));
       memset(prof3ds_spr_ticks, 0, sizeof(prof3ds_spr_ticks));
       memset(prof3ds_spr_cnt, 0, sizeof(prof3ds_spr_cnt));
+      memset(prof3ds_poly_ticks, 0, sizeof(prof3ds_poly_ticks));
+      memset(prof3ds_poly_cnt, 0, sizeof(prof3ds_poly_cnt));
    }
    if (frames != 2400) return;
    report_gpu();
@@ -190,14 +204,21 @@ edit('plugins/gpu_unai/gpulib_if.cpp',
      '#include <stdio.h>\n'
      'extern "C" {\n#include <3ds/types.h>\n#include <3ds/svc.h>\n}\n'
      'extern "C" u64 prof3ds_gcmd_ticks[256], prof3ds_spr_ticks[512];\n'
-     'extern "C" u32 prof3ds_gcmd_cnt[256], prof3ds_spr_cnt[512];\n')
+     'extern "C" u32 prof3ds_gcmd_cnt[256], prof3ds_spr_cnt[512];\n'
+     'extern "C" u64 prof3ds_poly_ticks[1024];\n'
+     'extern "C" u32 prof3ds_poly_cnt[1024], prof3ds_poly_idx;\n')
+edit('plugins/gpu_unai/gpulib_if.cpp', 'gpuPolySpanDrivers[', 'gpuPolySpanDrivers[prof3ds_poly_idx = ', 8)
 edit('plugins/gpu_unai/gpulib_if.cpp',
      '    PtrUnion packet = { .ptr = (void*)&gpu_unai.PacketBuffer };\n\n    switch (cmd)\n',
      '    PtrUnion packet = { .ptr = (void*)&gpu_unai.PacketBuffer };\n'
      '    u64 prof_t0 = svcGetSystemTick();\n\n    switch (cmd)\n')
 edit('plugins/gpu_unai/gpulib_if.cpp',
      '    }\n  }\n\nbreakloop:',
-     '    }\n    prof3ds_gcmd_ticks[cmd] += svcGetSystemTick() - prof_t0;\n    prof3ds_gcmd_cnt[cmd]++;\n  }\n\nbreakloop:')
+     '    }\n    prof3ds_gcmd_ticks[cmd] += svcGetSystemTick() - prof_t0;\n    prof3ds_gcmd_cnt[cmd]++;\n'
+     '    if (cmd >= 0x20 && cmd < 0x40) {\n'
+     '      prof3ds_poly_ticks[prof3ds_poly_idx & 1023] += svcGetSystemTick() - prof_t0;\n'
+     '      prof3ds_poly_cnt[prof3ds_poly_idx & 1023]++;\n    }\n'
+     '  }\n\nbreakloop:')
 edit('plugins/gpu_unai/gpulib_if.cpp',
      '  gpuDrawS(packet, driver, &w, &h);\n  gput_sum(cpu_cycles_sum, cpu_cycles, gput_sprite(w, h));\n}',
      '  u64 prof_s0 = svcGetSystemTick();\n  gpuDrawS(packet, driver, &w, &h);\n'

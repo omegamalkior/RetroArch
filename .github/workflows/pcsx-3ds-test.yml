@@ -49,7 +49,7 @@ jobs:
             patch: 1
             azahar: 0
           - name: prof-azahar
-            patch: 0
+            patch: 1
             azahar: 1
             prof: 1
     steps:
@@ -108,6 +108,8 @@ jobs:
           - variant: original-azahar
             tag: ''
           - variant: patched-azahar
+            tag: ''
+          - variant: prof-azahar
             tag: ''
     steps:
     - uses: actions/checkout@v4
