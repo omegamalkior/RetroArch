@@ -1104,6 +1104,50 @@ index 923d962..5935c78 100644
    memset(iwram, 0, 0x8000);
    memset(&ewram[0x40000], 0, 0x40000);
  
+diff --git a/main.c b/main.c
+index 09df6dd..399daa8 100644
+--- a/main.c
++++ b/main.c
+@@ -147,7 +147,7 @@ u32 function_cc update_gba(int remaining_cycles)
+     // Timers can trigger DMA (usually sound) and consume cycles
+     dma_cycles = update_timers(&irq_raised, completed_cycles);
+     // Check for serial port IRQs as well.
+-    if (update_serial(completed_cycles))
++    if (update_serial_needed() && update_serial(completed_cycles))
+       irq_raised |= IRQ_SERIAL;
+ 
+     // Video count tracks the video cycles remaining until the next event
+diff --git a/serial.c b/serial.c
+index 55bf2e1..ae20066 100644
+--- a/serial.c
++++ b/serial.c
+@@ -21,7 +21,7 @@
+ 
+ int serial_mode = SERIAL_MODE_AUTO;
+ 
+-static u32 serial_irq_cycles = 0;
++u32 serial_irq_cycles = 0;
+ 
+ /* Savestate accessors for the serial-IRQ scheduler. The pending-cycles
+  * counter must be persisted: without it, a state saved mid-transaction
+diff --git a/serial.h b/serial.h
+index 9f8c3d0..7fe2ba4 100644
+--- a/serial.h
++++ b/serial.h
+@@ -26,6 +26,13 @@
+ #define SERIAL_MODE_AUTO          6  // Choose best fit automatically
+ 
+ extern int serial_mode;
++extern u32 serial_irq_cycles;
++
++// Whether update_serial() has anything to do (a device to tick or an IRQ due).
++static inline bool update_serial_needed(void) {
++  return serial_irq_cycles || (serial_mode >= SERIAL_MODE_RFU &&
++                               serial_mode <= SERIAL_MODE_SERIAL_AW2);
++}
+ 
+ // Register writes
+ cpu_alert_type write_siocnt(u16 value);
 diff --git a/video.cc b/video.cc
 index 9d9f4bd..142ec47 100644
 --- a/video.cc
