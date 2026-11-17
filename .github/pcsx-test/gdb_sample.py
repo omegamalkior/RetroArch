@@ -2,13 +2,14 @@
 """Test-only: sampling profiler over Azahar's GDB stub.
 
 Stops the emulated process at intervals and records every thread's PC/LR.
-usage: gdb_sample.py PORT SAMPLES OUT.txt
+usage: gdb_sample.py PORT SAMPLES OUT.txt LOG
+Lets the process run until LOG shows frame 600, then samples.
 """
 import socket
 import sys
 import time
 
-port, samples, out = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
+port, samples, out, log = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3], sys.argv[4]
 
 
 class Gdb:
@@ -69,6 +70,24 @@ while r.startswith('m'):
     tids += [int(t, 16) for t in r[1:].split(',') if t]
     r = g.cmd('qsThreadInfo')
 print('threads:', tids, flush=True)
+
+g.send('c')
+t0 = time.time()
+while time.time() - t0 < 600:
+    try:
+        if 'frame 600 ' in open(log).read():
+            break
+    except OSError:
+        pass
+    time.sleep(2)
+g.s.sendall(b'\x03')
+g.recv()
+r = g.cmd('qfThreadInfo')
+tids = []
+while r.startswith('m'):
+    tids += [int(t, 16) for t in r[1:].split(',') if t]
+    r = g.cmd('qsThreadInfo')
+print('threads now:', tids, flush=True)
 
 with open(out, 'w') as f:
     for i in range(samples):

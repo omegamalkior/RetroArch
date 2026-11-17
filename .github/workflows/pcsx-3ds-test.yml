@@ -133,7 +133,7 @@ jobs:
             dl/pcsx-$v/pcsx_$v.3dsx dl/content results "$t" || true
         fi
         if [ "$RUN_PROFILE" = "1" ] && [ -z "$t" ]; then
-          PROFILE_SAMPLES=600 ONLY="$PROFILE_ONLY" python3 .github/pcsx-test/run_azahar.py \
+          PROFILE_SAMPLES=300 ONLY="$PROFILE_ONLY" python3 .github/pcsx-test/run_azahar.py \
             squashfs-root/AppRun $v dl/pcsx-$v/pcsx_$v.3dsx dl/content results -prof || true
           for d in results/$v-prof/*/; do
             [ -f "$d/samples.txt" ] || continue

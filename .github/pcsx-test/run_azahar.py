@@ -100,20 +100,22 @@ for name in sorted(os.listdir(content_dir)):
                          stdout=open(os.path.join(home, 'stdout.txt'), 'w'),
                          stderr=subprocess.STDOUT)
     result = 'did not finish'
+    if profile:
+        samples = os.path.join(home, 'samples.txt')
+        try:
+            rc = subprocess.call([sys.executable, os.path.join(os.path.dirname(__file__), 'gdb_sample.py'),
+                                  '24689', str(profile), samples, log], timeout=frames_timeout)
+        except subprocess.TimeoutExpired:
+            rc = 'timeout'
+        result = 'profiled (%s)' % rc
     last_line = ''
-    while time.time() - t0 < frames_timeout:
+    while not profile and time.time() - t0 < frames_timeout:
         time.sleep(5)
         if os.path.exists(log):
             lines = open(log).read().splitlines()
             if lines:
                 last_line = lines[-1]
             done = [l for l in lines if l.startswith('DONE')]
-            if profile and any(l.startswith('frame 600 ') for l in lines):
-                samples = os.path.join(home, 'samples.txt')
-                subprocess.call([sys.executable, os.path.join(os.path.dirname(__file__), 'gdb_sample.py'),
-                                 '24689', str(profile), samples], timeout=frames_timeout)
-                result = 'profiled'
-                break
             if done:
                 result = done[0]
                 break
