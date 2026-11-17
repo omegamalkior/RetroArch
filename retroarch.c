@@ -7597,6 +7597,18 @@ int main(int argc, char *argv[])
       }
    }
 #endif
+#ifdef GPSP_BOOT_CONTENT
+   /* Boot straight into one game */
+   if (argc <= 1)
+   {
+      static char *boot_argv[3];
+      boot_argv[0] = (char*)"sdmc:/retroarch/retroarch.3dsx";
+      boot_argv[1] = (char*)GPSP_BOOT_CONTENT;
+      boot_argv[2] = NULL;
+      argc         = 2;
+      argv         = boot_argv;
+   }
+#endif
    return rarch_main(argc, argv, NULL);
 }
 #endif

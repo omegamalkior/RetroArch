@@ -2293,7 +2293,9 @@ static void gat_dump_frame(const void *frame, unsigned width,
       fwrite((const u8*)frame + y * pitch, 2, width, f);
    fclose(f);
 }
+#endif
 
+#ifdef GPSP_AZAHAR_DISPLAY
 /* Azahar shows the GPU-drawn picture as black, so draw the RGB565 core
  * frame into the 400x240 top framebuffer (columns of 240 BGR8 pixels,
  * bottom to top) with the CPU, scaled to full height. */
@@ -2370,9 +2372,10 @@ static bool ctr_frame(void* data, const void* frame,
    bool lcd_bottom                = false;
    bool views                     = false;
    uint32_t flags                 = runloop_get_flags();
-#ifdef GPSP_AZAHAR_TEST
+#ifdef GPSP_AZAHAR_DISPLAY
    bool gat_cpu_top               = false;
-
+#endif
+#ifdef GPSP_AZAHAR_TEST
    gat_dump_frame(frame, width, height, pitch);
 #endif
 
@@ -2783,7 +2786,7 @@ static bool ctr_frame(void* data, const void* frame,
    GPU_Finalize();
    ctrGuFlushAndRun(true);
 
-#ifdef GPSP_AZAHAR_TEST
+#ifdef GPSP_AZAHAR_DISPLAY
    gat_cpu_top = frame && frame != RETRO_HW_FRAME_BUFFER_VALID
          && !ctr->rgb32 && width && height
          && ctr->video_mode != CTR_VIDEO_MODE_2D_800X240;
@@ -2803,7 +2806,7 @@ static bool ctr_frame(void* data, const void* frame,
                         CTRGU_RGBA8,
                         gfxTopLeftFramebuffers[ctr->current_buffer_top], 240, CTRGU_RGB8, CTRGU_MULTISAMPLE_NONE);
 
-#ifdef GPSP_AZAHAR_TEST
+#ifdef GPSP_AZAHAR_DISPLAY
    if (!gat_cpu_top)
 #endif
    if ((ctr->video_mode == CTR_VIDEO_MODE_2D_400X240) || (ctr->video_mode == CTR_VIDEO_MODE_3D))
@@ -2945,7 +2948,7 @@ static bool ctr_frame(void* data, const void* frame,
 
    ctr->p3d_event_pending       = true;
    ctr->ppf_event_pending       = true;
-#ifdef GPSP_AZAHAR_TEST
+#ifdef GPSP_AZAHAR_DISPLAY
    /* No display transfer was issued, so no PPF event will come. */
    if (gat_cpu_top && !ctr->refresh_bottom_menu)
       ctr->ppf_event_pending    = false;
