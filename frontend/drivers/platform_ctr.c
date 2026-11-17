@@ -146,6 +146,29 @@ static void frontend_ctr_get_env(int* argc, char* argv[],
 #ifndef IS_SALAMANDER
    dir_check_defaults("custom.ini");
 #endif
+#if defined(CTR64_TEST_AUTOLOAD) && !defined(IS_SALAMANDER)
+   /* test builds only: start the content named in sdmc:/retroarch/autoload.txt */
+   {
+      static char path[PATH_MAX_LENGTH];
+      FILE *f = fopen("sdmc:/retroarch/autoload.txt", "r");
+      struct rarch_main_wrap *wrap = (struct rarch_main_wrap*)params_data;
+      if (f)
+      {
+         if (fgets(path, sizeof(path), f) && wrap)
+         {
+            path[strcspn(path, "\r\n")] = 0;
+            wrap->flags        &= ~(RARCH_MAIN_WRAP_FLAG_VERBOSE | RARCH_MAIN_WRAP_FLAG_NO_CONTENT);
+            wrap->flags        |= RARCH_MAIN_WRAP_FLAG_TOUCHED;
+            wrap->config_path   = NULL;
+            wrap->sram_path     = NULL;
+            wrap->state_path    = NULL;
+            wrap->content_path  = path;
+            wrap->libretro_path = NULL;
+         }
+         fclose(f);
+      }
+   }
+#endif
 }
 
 #ifdef USE_CTRULIB_2

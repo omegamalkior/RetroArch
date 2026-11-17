@@ -1,4 +1,17 @@
-ifeq ($(LIBRETRO), 2048)
+ifeq ($(LIBRETRO), ctr64)
+	APP_TITLE            = ctr64 (N64)
+	APP_AUTHOR           = ctr64 / Mupen64Plus-Next / GLideN64
+	APP_PRODUCT_CODE     = RARCH-CTR64
+	APP_UNIQUE_ID        = 0xBAD64
+	APP_ICON             = pkg/ctr/assets/default.png
+	APP_BANNER           = pkg/ctr/assets/libretro_banner.png
+	APP_SYSTEM_MODE      = 96MB
+	APP_SYSTEM_MODE_EXT  = 124MB
+	APP_RSF              = pkg/ctr/tools/ctr64.rsf
+	# the core renders with the PICA200 itself: textures and frame buffers in linear memory
+	APP_LINEAR_HEAP      = 0x02000000
+
+else ifeq ($(LIBRETRO), 2048)
 	APP_TITLE            = 2048 Libretro
 	APP_PRODUCT_CODE     = RARCH-2048
 	APP_UNIQUE_ID        = 0xBAC0B

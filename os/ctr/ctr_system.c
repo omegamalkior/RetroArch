@@ -11,7 +11,10 @@
 
 /* Global variables */
 u32 __stacksize__      = 0x00400000;
-u32 __linear_heap_size = 0x01000000;
+#ifndef CTR_LINEAR_HEAP_SIZE
+#define CTR_LINEAR_HEAP_SIZE 0x01000000
+#endif
+u32 __linear_heap_size = CTR_LINEAR_HEAP_SIZE;
 
 u32 __heap_size;
 u32 __linear_heap;

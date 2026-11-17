@@ -2175,6 +2175,8 @@ static bool ctr_get_current_software_framebuffer(void *data,
    return true;
 }
 
+extern bool ctr_core_gpu_exclusive __attribute__((weak));
+
 static bool ctr_frame(void* data, const void* frame,
       unsigned dims,
       uint64_t frame_count,
@@ -2766,6 +2768,17 @@ static bool ctr_frame(void* data, const void* frame,
    ctr->p3d_event_pending       = true;
    ctr->ppf_event_pending       = true;
    ctr->refresh_bottom_menu     = false;
+
+   /* A core that drives the PICA200 itself (ctr64) defines ctr_core_gpu_exclusive:
+    * the GPU work of this frame is finished before the core runs again, so the
+    * GSP interrupts of the two never interleave (libctru's GX queue counts them). */
+   if (&ctr_core_gpu_exclusive && ctr_core_gpu_exclusive)
+   {
+      gspWaitForEvent(GSPGPU_EVENT_P3D, false);
+      gspWaitForEvent(GSPGPU_EVENT_PPF, false);
+      ctr->p3d_event_pending    = false;
+      ctr->ppf_event_pending    = false;
+   }
 
    return true;
 }
