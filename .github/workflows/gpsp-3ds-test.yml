@@ -65,3 +65,27 @@ jobs:
       with:
         name: gpsp-${{ matrix.name }}
         path: out/
+
+  # Test-only transport: artifact storage isn't reachable from where the
+  # builds get tested, so put them on a throwaway orphan branch.
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        path: builds
+        merge-multiple: true
+    - name: Push builds to the gpsp-3ds-test-builds branch
+      run: |
+        cd builds
+        ls -la
+        git init -q
+        git config user.name "gpsp test build"
+        git config user.email "noreply@github.com"
+        git checkout -q --orphan gpsp-3ds-test-builds
+        git add -A
+        git commit -q -m "gpSP 3DS test builds from ${GITHUB_SHA}"
+        git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" gpsp-3ds-test-builds
