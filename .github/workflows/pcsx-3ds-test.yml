@@ -109,8 +109,10 @@ jobs:
             tag: ''
           - variant: patched-azahar
             tag: ''
-          - variant: prof-azahar
-            tag: ''
+          - variant: original-azahar
+            tag: -sync
+          - variant: patched-azahar
+            tag: -sync
     steps:
     - uses: actions/checkout@v4
     - uses: actions/download-artifact@v4
@@ -135,6 +137,9 @@ jobs:
         v=${{ matrix.variant }}
         t='${{ matrix.tag }}'
         mkdir -p results
+        if [ "$t" = "-sync" ]; then
+          export CORE_OPTS="pcsx_rearmed_gpu_thread_rendering=disabled"
+        fi
         if [ "$RUN_TIMING" = "1" ]; then
           python3 .github/pcsx-test/run_azahar.py squashfs-root/AppRun $v \
             dl/pcsx-$v/pcsx_$v.3dsx dl/content results "$t" || true
@@ -170,7 +175,10 @@ jobs:
         pattern: results-*
         merge-multiple: true
     - name: Compare original and patched
-      run: python3 .github/pcsx-test/compare_frames.py r original-azahar patched-azahar | tee r/compare.txt
+      run: |
+        python3 .github/pcsx-test/compare_frames.py r original-azahar patched-azahar | tee r/compare.txt
+        echo "--- GPU thread off (rendering in step with the emulated CPU):"
+        python3 .github/pcsx-test/compare_frames.py r original-azahar-sync patched-azahar-sync | tee -a r/compare.txt
 
   # Test-only transport: artifact storage isn't reachable from where the
   # builds get tested, so put them on a throwaway orphan branch.

@@ -81,6 +81,12 @@ for name in sorted(os.listdir(content_dir)):
     open(os.path.join(sdmc, '3ds', 'dspfirm.cdc'), 'wb').write(fw)
     open(os.path.join(conf, 'qt-config.ini'), 'w').write(QT_CONFIG)
     open(os.path.join(sdmc, 'retroarch', 'retroarch.cfg'), 'w').write(RA_CFG)
+    opts = os.environ.get('CORE_OPTS', '')
+    if opts:
+        lines = ''.join('%s = "%s"\n' % tuple(o.split('=', 1)) for o in opts.split())
+        os.makedirs(os.path.join(sdmc, 'retroarch', 'config', 'PCSX-ReARMed'))
+        open(os.path.join(sdmc, 'retroarch', 'config', 'PCSX-ReARMed', 'PCSX-ReARMed.opt'), 'w').write(lines)
+        open(os.path.join(sdmc, 'retroarch', 'retroarch-core-options.cfg'), 'w').write(lines)
     shutil.copy(os.path.join(content_dir, name), os.path.join(e2e, name))
     open(os.path.join(e2e, 'autoload.txt'), 'w').write('sdmc:/retroarch/e2e/' + name)
     log = os.path.join(e2e, 'out_' + variant, 'log.txt')
