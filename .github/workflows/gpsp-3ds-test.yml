@@ -57,7 +57,7 @@ jobs:
         cp retroarch_3ds.cia out/gpsp_$NAME.cia
         ls -la out
         SCRIPT
-        docker run --rm -v "$PWD:/w" -w /w \
+        docker run --rm --user root -v "$PWD:/w" -w /w \
           -e PATCH=${{ matrix.patch }} -e AZAHAR=${{ matrix.azahar }} -e NAME=${{ matrix.name }} \
           reallibretroretroarch/libretro-build-devkitpro:latest bash /w/build.sh
 
