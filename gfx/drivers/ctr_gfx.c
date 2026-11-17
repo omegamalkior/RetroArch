@@ -2175,6 +2175,166 @@ static bool ctr_get_current_software_framebuffer(void *data,
    return true;
 }
 
+#ifdef GPSP_AZAHAR_TEST
+#include <sys/stat.h>
+/* Test-only instrumentation (Azahar gpSP comparison). Times retro_run in
+ * emulated ARM11 ticks and dumps some frames to the SD card. */
+#ifndef GPSP_TEST_VARIANT
+#define GPSP_TEST_VARIANT "unknown"
+#endif
+#define GAT_DIR "sdmc:/retroarch/e2e/out_" GPSP_TEST_VARIANT
+#define GAT_LAST_FRAME 2400
+static FILE *gat_log         = NULL;
+static u64 gat_t0            = 0;
+static u64 gat_win_run       = 0;
+static u64 gat_total_run     = 0;
+static u64 gat_win_start     = 0;
+static u64 gat_measure_run   = 0;
+static unsigned gat_frames   = 0;
+static bool gat_done         = false;
+static bool gat_in_run       = false;
+static unsigned gat_cb_depth = 0;
+static u64 gat_cb_t0         = 0;
+static u64 gat_win_cb        = 0;
+static u64 gat_total_cb      = 0;
+static u64 gat_measure_cb    = 0;
+
+void gat_cb_begin(void)
+{
+   if (gat_in_run && gat_cb_depth++ == 0)
+      gat_cb_t0 = svcGetSystemTick();
+}
+
+void gat_cb_end(void)
+{
+   u64 d;
+   if (!gat_in_run || !gat_cb_depth || --gat_cb_depth)
+      return;
+   d             = svcGetSystemTick() - gat_cb_t0;
+   gat_win_cb   += d;
+   gat_total_cb += d;
+   if (gat_frames >= 600)
+      gat_measure_cb += d;
+}
+
+void gat_run_begin(void)
+{
+   if (!gat_log && !gat_done)
+   {
+      mkdir("sdmc:/retroarch/e2e", 0777);
+      mkdir(GAT_DIR, 0777);
+      gat_log = fopen(GAT_DIR "/log.txt", "w");
+      if (gat_log)
+      {
+         fprintf(gat_log, "variant %s\n", GPSP_TEST_VARIANT);
+         fflush(gat_log);
+      }
+      gat_win_start = svcGetSystemTick();
+   }
+   gat_cb_depth = 0;
+   gat_in_run   = true;
+   gat_t0       = svcGetSystemTick();
+}
+
+void gat_run_end(void)
+{
+   u64 d = svcGetSystemTick() - gat_t0;
+   gat_in_run = false;
+   if (gat_done || !gat_log)
+      return;
+   gat_frames++;
+   gat_win_run   += d;
+   gat_total_run += d;
+   /* The first 10 seconds include translation of new code */
+   if (gat_frames > 600)
+      gat_measure_run += d;
+   if ((gat_frames % 60) == 0)
+   {
+      u64 now = svcGetSystemTick();
+      fprintf(gat_log, "frame %u run_ticks_per_frame %llu core_ticks_per_frame %llu window_ticks %llu\n",
+            gat_frames, (unsigned long long)(gat_win_run / 60),
+            (unsigned long long)((gat_win_run - gat_win_cb) / 60),
+            (unsigned long long)(now - gat_win_start));
+      fflush(gat_log);
+      gat_win_run   = 0;
+      gat_win_cb    = 0;
+      gat_win_start = now;
+   }
+   if (gat_frames == GAT_LAST_FRAME)
+   {
+      fprintf(gat_log, "DONE frames %u avg_core_ticks_per_frame_after_600 %llu avg_core_all %llu avg_run_ticks_per_frame_after_600 %llu\n",
+            gat_frames,
+            (unsigned long long)((gat_measure_run - gat_measure_cb) / (GAT_LAST_FRAME - 600)),
+            (unsigned long long)((gat_total_run - gat_total_cb) / gat_frames),
+            (unsigned long long)(gat_measure_run / (GAT_LAST_FRAME - 600)));
+      fclose(gat_log);
+      gat_log  = NULL;
+      gat_done = true;
+   }
+}
+
+static void gat_dump_frame(const void *frame, unsigned width,
+      unsigned height, unsigned pitch)
+{
+   char name[128];
+   FILE *f;
+   unsigned y;
+   if (gat_done || !frame || frame == RETRO_HW_FRAME_BUFFER_VALID)
+      return;
+   if (     gat_frames != 300  && gat_frames != 900
+         && gat_frames != 1500 && gat_frames != 2100
+         && gat_frames != 2399)
+      return;
+   snprintf(name, sizeof(name), GAT_DIR "/f%u_%ux%u.raw",
+         gat_frames, width, height);
+   if (!(f = fopen(name, "wb")))
+      return;
+   for (y = 0; y < height; y++)
+      fwrite((const u8*)frame + y * pitch, 2, width, f);
+   fclose(f);
+}
+#endif
+
+#ifdef GPSP_AZAHAR_DISPLAY
+/* Azahar shows the GPU-drawn picture as black, so draw the RGB565 core
+ * frame into the 400x240 top framebuffer (columns of 240 BGR8 pixels,
+ * bottom to top) with the CPU, scaled to full height. */
+static void gat_blit_top(u8 *fb, const void *frame, unsigned width,
+      unsigned height, unsigned pitch)
+{
+   unsigned x, y;
+   unsigned out_w = width * 240 / height;
+   unsigned x0;
+   if (out_w > 400)
+      out_w = 400;
+   x0 = (400 - out_w) / 2;
+   for (x = 0; x < 400; x++)
+   {
+      u8 *col = fb + x * 240 * 3;
+      unsigned sx;
+      if (x < x0 || x >= x0 + out_w)
+      {
+         memset(col, 0, 240 * 3);
+         continue;
+      }
+      sx = (x - x0) * width / out_w;
+      for (y = 0; y < 240; y++)
+      {
+         u16 p = ((const u16*)((const u8*)frame
+                  + (y * height / 240) * pitch))[sx];
+         u8 *o = col + (239 - y) * 3;
+         u8 r  = (p >> 11) & 0x1F;
+         u8 g  = (p >> 5)  & 0x3F;
+         u8 b  =  p        & 0x1F;
+         o[0]  = (b << 3) | (b >> 2);
+         o[1]  = (g << 2) | (g >> 4);
+         o[2]  = (r << 3) | (r >> 2);
+      }
+   }
+   GSPGPU_FlushDataCache(fb, 400 * 240 * 3);
+}
+#endif
+
 static bool ctr_frame(void* data, const void* frame,
       unsigned dims,
       uint64_t frame_count,
@@ -2212,6 +2372,12 @@ static bool ctr_frame(void* data, const void* frame,
    bool lcd_bottom                = false;
    bool views                     = false;
    uint32_t flags                 = runloop_get_flags();
+#ifdef GPSP_AZAHAR_DISPLAY
+   bool gat_cpu_top               = false;
+#endif
+#ifdef GPSP_AZAHAR_TEST
+   gat_dump_frame(frame, width, height, pitch);
+#endif
 
    if (!width || !height || !settings)
    {
@@ -2620,12 +2786,29 @@ static bool ctr_frame(void* data, const void* frame,
    GPU_Finalize();
    ctrGuFlushAndRun(true);
 
+#ifdef GPSP_AZAHAR_DISPLAY
+   gat_cpu_top = frame && frame != RETRO_HW_FRAME_BUFFER_VALID
+         && !ctr->rgb32 && width && height
+         && ctr->video_mode != CTR_VIDEO_MODE_2D_800X240;
+   if (gat_cpu_top)
+   {
+      gat_blit_top(gfxTopLeftFramebuffers[ctr->current_buffer_top],
+            frame, width, height, pitch);
+      if (ctr->enable_3d)
+         gat_blit_top(gfxTopRightFramebuffers[ctr->current_buffer_top],
+               frame, width, height, pitch);
+   }
+   else
+#endif
    ctrGuDisplayTransfer(true, ctr->drawbuffers.top.left,
                         240,
                         ctr->video_mode == CTR_VIDEO_MODE_2D_800X240 ? 800 : 400,
                         CTRGU_RGBA8,
                         gfxTopLeftFramebuffers[ctr->current_buffer_top], 240, CTRGU_RGB8, CTRGU_MULTISAMPLE_NONE);
 
+#ifdef GPSP_AZAHAR_DISPLAY
+   if (!gat_cpu_top)
+#endif
    if ((ctr->video_mode == CTR_VIDEO_MODE_2D_400X240) || (ctr->video_mode == CTR_VIDEO_MODE_3D))
       ctrGuDisplayTransfer(
             true,
@@ -2765,6 +2948,11 @@ static bool ctr_frame(void* data, const void* frame,
 
    ctr->p3d_event_pending       = true;
    ctr->ppf_event_pending       = true;
+#ifdef GPSP_AZAHAR_DISPLAY
+   /* No display transfer was issued, so no PPF event will come. */
+   if (gat_cpu_top && !ctr->refresh_bottom_menu)
+      ctr->ppf_event_pending    = false;
+#endif
    ctr->refresh_bottom_menu     = false;
 
    return true;

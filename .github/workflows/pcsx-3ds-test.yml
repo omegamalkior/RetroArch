@@ -1,0 +1,151 @@
+name: PCSX ReARMed 3DS test build
+
+on:
+  push:
+    branches: [pcsx-rearmed-3ds-test]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PCSX_SHA: 7b0e8f8fadfbce3d170d195b9d9eecaabfa08c8e
+
+jobs:
+  content:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v4
+    - name: Get PS1 homebrew test programs
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        sudo apt-get update -qq && sudo apt-get install -y -qq ninja-build >/dev/null
+        bash .github/pcsx-test/get_content.sh
+    - uses: actions/upload-artifact@v4
+      with:
+        name: content
+        path: content/
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: original-azahar
+            patch: 0
+            azahar: 1
+          - name: patched-azahar
+            patch: 1
+            azahar: 1
+          - name: patched-3ds
+            patch: 1
+            azahar: 0
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build (${{ matrix.name }})
+      run: |
+        cat > build.sh <<'SCRIPT'
+        set -e
+        git config --global --add safe.directory '*'
+        git init -q /tmp/pcsx && cd /tmp/pcsx
+        git remote add origin https://github.com/libretro/pcsx_rearmed.git
+        git fetch -q --depth 1 origin "$PCSX_SHA" && git checkout -q FETCH_HEAD
+        if [ "$PATCH" = "1" ]; then
+          for p in /w/.github/pcsx-test/patches/*.patch; do
+            [ -s "$p" ] && git apply -v "$p"
+          done
+        fi
+        if [ "$AZAHAR" = "1" ]; then
+          python3 /w/.github/pcsx-test/azahar_variant.py .
+        fi
+        git diff --stat
+        make -f Makefile.libretro platform=ctr -j$(getconf _NPROCESSORS_ONLN)
+        cp pcsx_rearmed_libretro_ctr.a /w/libretro_ctr.a
+        cd /w
+        mkdir -p out
+        if [ "$AZAHAR" = "1" ]; then
+          EXTRA="GPSP_AZAHAR_TEST=1 GPSP_TEST_VARIANT=$NAME APP_USE_SVCHAX=0"
+        else
+          EXTRA=""
+        fi
+        make -f Makefile.ctr -j$(getconf _NPROCESSORS_ONLN) USE_CTRULIB_2=1 LIBRETRO=pcsx_rearmed $EXTRA
+        cp retroarch_3ds.3dsx out/pcsx_$NAME.3dsx
+        cp retroarch_3ds.cia out/pcsx_$NAME.cia
+        ls -la out
+        SCRIPT
+        docker run --rm --user root -v "$PWD:/w" -w /w \
+          -e PATCH=${{ matrix.patch }} -e AZAHAR=${{ matrix.azahar }} -e NAME=${{ matrix.name }} -e PCSX_SHA \
+          reallibretroretroarch/libretro-build-devkitpro:latest bash /w/build.sh
+    - uses: actions/upload-artifact@v4
+      with:
+        name: pcsx-${{ matrix.name }}
+        path: out/
+
+  test:
+    needs: [content, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/download-artifact@v4
+      with:
+        path: dl
+    - name: Get Azahar
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq xvfb libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 \
+          libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 \
+          libxcb-xinerama0 libegl1 libgl1 libopengl0 libpulse0 >/dev/null
+        gh release download -R azahar-emu/azahar -p 'azahar.AppImage'
+        chmod +x azahar.AppImage
+        ./azahar.AppImage --appimage-extract >/dev/null
+        ls squashfs-root | head
+    - name: Run in Azahar
+      run: |
+        Xvfb :99 -screen 0 1280x720x24 &
+        export DISPLAY=:99
+        sleep 2
+        ls -la dl/content
+        mkdir -p results
+        for v in original-azahar patched-azahar; do
+          python3 .github/pcsx-test/run_azahar.py squashfs-root/AppRun $v \
+            dl/pcsx-$v/pcsx_$v.3dsx dl/content results || true
+        done
+        python3 .github/pcsx-test/run_azahar.py squashfs-root/AppRun original-azahar \
+          dl/pcsx-original-azahar/pcsx_original-azahar.3dsx dl/content results -run2 || true
+        cat results/summary_*.txt
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: results
+        path: results/
+
+  # Test-only transport: artifact storage isn't reachable from where the
+  # builds get tested, so put them on a throwaway orphan branch.
+  publish:
+    needs: [build, test]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        path: pub
+    - name: Push builds and results to the pcsx-3ds-test-builds branch
+      run: |
+        cd pub
+        ls -R | head -100
+        git init -q
+        git config user.name "pcsx test build"
+        git config user.email "noreply@github.com"
+        git checkout -q --orphan pcsx-3ds-test-builds
+        git add -A
+        git commit -q -m "PCSX ReARMed 3DS test builds from ${GITHUB_SHA}"
+        git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" pcsx-3ds-test-builds
