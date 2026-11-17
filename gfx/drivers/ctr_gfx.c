@@ -2183,7 +2183,9 @@ static bool ctr_get_current_software_framebuffer(void *data,
 #define GPSP_TEST_VARIANT "unknown"
 #endif
 #define GAT_DIR "sdmc:/retroarch/e2e/out_" GPSP_TEST_VARIANT
+#ifndef GAT_LAST_FRAME
 #define GAT_LAST_FRAME 2400
+#endif
 static FILE *gat_log         = NULL;
 static u64 gat_t0            = 0;
 static u64 gat_win_run       = 0;
@@ -2193,6 +2195,8 @@ static u64 gat_measure_run   = 0;
 static unsigned gat_frames   = 0;
 static bool gat_done         = false;
 static bool gat_in_run       = false;
+
+unsigned gat_frame_number(void) { return gat_frames; }
 static unsigned gat_cb_depth = 0;
 static u64 gat_cb_t0         = 0;
 static u64 gat_win_cb        = 0;
@@ -2227,6 +2231,14 @@ void gat_run_begin(void)
       if (gat_log)
       {
          fprintf(gat_log, "variant %s\n", GPSP_TEST_VARIANT);
+#ifdef GPSP_HW_TIMING
+         {
+            extern int dynarec_enable;
+            extern u32 __ctr_svchax;
+            fprintf(gat_log, "dynarec %d svchax %u\n",
+                  dynarec_enable, (unsigned)__ctr_svchax);
+         }
+#endif
          fflush(gat_log);
       }
       gat_win_start = svcGetSystemTick();

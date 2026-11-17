@@ -1,0 +1,100 @@
+name: gpSP split 3DS timing builds
+
+# Real-hardware timing builds of each split gpSP change (omegamalkior/gpsp).
+# Each build boots Metroid Fusion, plays it with scripted input and writes
+# core time per frame (svcGetSystemTick) to sdmc:/retroarch/e2e/out_<name>/.
+
+on:
+  push:
+    branches: [gpsp-split-3ds-timing]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: original
+            ref: 5819380c2ffb0900219d700a382ee68c464ebb99
+          - name: fix-bios-div-cache-sync
+            ref: split/fix-bios-div-cache-sync
+          - name: fix-ram-cache-offset-zero
+            ref: split/fix-ram-cache-offset-zero
+          - name: fix-stm-store-ignore-return
+            ref: split/fix-stm-store-ignore-return
+          - name: serial-skip-when-idle
+            ref: split/serial-skip-when-idle
+          - name: video-brightness-pairs
+            ref: split/video-brightness-pairs
+          - name: arm-cycle-check-branch
+            ref: split/arm-cycle-check-branch
+          - name: arm-indirect-branch-cache
+            ref: split/arm-indirect-branch-cache
+          - name: arm-mem-handlers-bx-lr
+            ref: split/arm-mem-handlers-bx-lr
+          - name: arm-mem-fastpath-single
+            ref: split/arm-mem-fastpath-single
+          - name: arm-mem-fastpath-block
+            ref: split/arm-mem-fastpath-block
+          - name: all-combined
+            ref: split/all-combined
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build (${{ matrix.name }})
+      run: |
+        cat > build.sh <<'SCRIPT'
+        set -e
+        git config --global --add safe.directory '*'
+        git clone https://github.com/omegamalkior/gpsp.git /tmp/gpsp
+        cd /tmp/gpsp
+        git checkout "$REF"
+        git log -1 --format='gpSP %h %s'
+        make platform=ctr -j$(getconf _NPROCESSORS_ONLN)
+        cp gpsp_libretro_ctr.a /w/libretro_ctr.a
+        cd /w
+        mkdir -p out
+        make -f Makefile.ctr -j$(getconf _NPROCESSORS_ONLN) USE_CTRULIB_2=1 LIBRETRO=gpsp \
+          GPSP_HW_TIMING=1 GPSP_TEST_VARIANT=$NAME \
+          GPSP_BOOT_CONTENT=sdmc:/roms/gba/metroid_fusion.gba
+        cp retroarch_3ds.3dsx out/gpsp_timing_$NAME.3dsx
+        cp retroarch_3ds.cia out/gpsp_timing_$NAME.cia
+        ls -la out
+        SCRIPT
+        docker run --rm --user root -v "$PWD:/w" -w /w \
+          -e REF="${{ matrix.ref }}" -e NAME=${{ matrix.name }} \
+          reallibretroretroarch/libretro-build-devkitpro:latest bash /w/build.sh
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: gpsp-${{ matrix.name }}
+        path: out/
+
+  # Test-only transport: put the builds on a throwaway orphan branch.
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        path: builds
+        merge-multiple: true
+    - name: Push builds to the gpsp-split-3ds-builds branch
+      run: |
+        cd builds
+        ls -la
+        git init -q
+        git config user.name "gpsp test build"
+        git config user.email "noreply@github.com"
+        git checkout -q --orphan gpsp-split-3ds-builds
+        git add -A
+        git commit -q -m "gpSP split 3DS timing builds from ${GITHUB_SHA}"
+        git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" gpsp-split-3ds-builds

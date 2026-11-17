@@ -6816,6 +6816,31 @@ static void gat_sample(int16_t left, int16_t right)
    audio_driver_sample(left, right);
    gat_cb_end();
 }
+#ifdef GPSP_HW_TIMING
+extern unsigned gat_frame_number(void);
+
+/* Scripted input, same as tools/armtest/harness in the gpSP fork */
+static int16_t gat_input_state(unsigned port, unsigned device,
+      unsigned idx, unsigned id)
+{
+   unsigned f = gat_frame_number();
+   int16_t m  = 0;
+   if (port || device != RETRO_DEVICE_JOYPAD)
+      return core_input_state_cb(port, device, idx, id);
+   if ((f % 90) < 4 && f > 60)
+      m |= 1 << RETRO_DEVICE_ID_JOYPAD_START;
+   if ((f % 45) < 3 && f > 120)
+      m |= 1 << RETRO_DEVICE_ID_JOYPAD_A;
+   if ((f % 600) > 300)
+      m |= 1 << RETRO_DEVICE_ID_JOYPAD_RIGHT;
+   if ((f % 70) < 10 && f > 400)
+      m |= 1 << RETRO_DEVICE_ID_JOYPAD_B;
+   if (id == RETRO_DEVICE_ID_JOYPAD_MASK)
+      return m;
+   return (m >> id) & 1;
+}
+#define core_input_state_cb       gat_input_state
+#endif
 #define video_driver_frame        gat_video_frame
 #define audio_driver_sample_batch gat_sample_batch
 #define audio_driver_sample       gat_sample
@@ -11029,6 +11054,9 @@ bool core_set_default_callbacks(void *data)
    return true;
 }
 #ifdef GPSP_AZAHAR_TEST
+#ifdef GPSP_HW_TIMING
+#undef core_input_state_cb
+#endif
 #undef video_driver_frame
 #undef audio_driver_sample_batch
 #undef audio_driver_sample
