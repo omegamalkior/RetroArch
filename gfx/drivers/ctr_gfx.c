@@ -2293,6 +2293,44 @@ static void gat_dump_frame(const void *frame, unsigned width,
       fwrite((const u8*)frame + y * pitch, 2, width, f);
    fclose(f);
 }
+
+/* Azahar shows the GPU-drawn picture as black, so draw the RGB565 core
+ * frame into the 400x240 top framebuffer (columns of 240 BGR8 pixels,
+ * bottom to top) with the CPU, scaled to full height. */
+static void gat_blit_top(u8 *fb, const void *frame, unsigned width,
+      unsigned height, unsigned pitch)
+{
+   unsigned x, y;
+   unsigned out_w = width * 240 / height;
+   unsigned x0;
+   if (out_w > 400)
+      out_w = 400;
+   x0 = (400 - out_w) / 2;
+   for (x = 0; x < 400; x++)
+   {
+      u8 *col = fb + x * 240 * 3;
+      unsigned sx;
+      if (x < x0 || x >= x0 + out_w)
+      {
+         memset(col, 0, 240 * 3);
+         continue;
+      }
+      sx = (x - x0) * width / out_w;
+      for (y = 0; y < 240; y++)
+      {
+         u16 p = ((const u16*)((const u8*)frame
+                  + (y * height / 240) * pitch))[sx];
+         u8 *o = col + (239 - y) * 3;
+         u8 r  = (p >> 11) & 0x1F;
+         u8 g  = (p >> 5)  & 0x3F;
+         u8 b  =  p        & 0x1F;
+         o[0]  = (b << 3) | (b >> 2);
+         o[1]  = (g << 2) | (g >> 4);
+         o[2]  = (r << 3) | (r >> 2);
+      }
+   }
+   GSPGPU_FlushDataCache(fb, 400 * 240 * 3);
+}
 #endif
 
 static bool ctr_frame(void* data, const void* frame,
@@ -2332,8 +2370,9 @@ static bool ctr_frame(void* data, const void* frame,
    bool lcd_bottom                = false;
    bool views                     = false;
    uint32_t flags                 = runloop_get_flags();
-
 #ifdef GPSP_AZAHAR_TEST
+   bool gat_cpu_top               = false;
+
    gat_dump_frame(frame, width, height, pitch);
 #endif
 
@@ -2744,12 +2783,29 @@ static bool ctr_frame(void* data, const void* frame,
    GPU_Finalize();
    ctrGuFlushAndRun(true);
 
+#ifdef GPSP_AZAHAR_TEST
+   gat_cpu_top = frame && frame != RETRO_HW_FRAME_BUFFER_VALID
+         && !ctr->rgb32 && width && height
+         && ctr->video_mode != CTR_VIDEO_MODE_2D_800X240;
+   if (gat_cpu_top)
+   {
+      gat_blit_top(gfxTopLeftFramebuffers[ctr->current_buffer_top],
+            frame, width, height, pitch);
+      if (ctr->enable_3d)
+         gat_blit_top(gfxTopRightFramebuffers[ctr->current_buffer_top],
+               frame, width, height, pitch);
+   }
+   else
+#endif
    ctrGuDisplayTransfer(true, ctr->drawbuffers.top.left,
                         240,
                         ctr->video_mode == CTR_VIDEO_MODE_2D_800X240 ? 800 : 400,
                         CTRGU_RGBA8,
                         gfxTopLeftFramebuffers[ctr->current_buffer_top], 240, CTRGU_RGB8, CTRGU_MULTISAMPLE_NONE);
 
+#ifdef GPSP_AZAHAR_TEST
+   if (!gat_cpu_top)
+#endif
    if ((ctr->video_mode == CTR_VIDEO_MODE_2D_400X240) || (ctr->video_mode == CTR_VIDEO_MODE_3D))
       ctrGuDisplayTransfer(
             true,
@@ -2889,6 +2945,11 @@ static bool ctr_frame(void* data, const void* frame,
 
    ctr->p3d_event_pending       = true;
    ctr->ppf_event_pending       = true;
+#ifdef GPSP_AZAHAR_TEST
+   /* No display transfer was issued, so no PPF event will come. */
+   if (gat_cpu_top && !ctr->refresh_bottom_menu)
+      ctr->ppf_event_pending    = false;
+#endif
    ctr->refresh_bottom_menu     = false;
 
    return true;

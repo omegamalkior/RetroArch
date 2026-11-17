@@ -74,6 +74,10 @@ edit('libretro/libretro.c',
 
    if (__ctr_svchax && translation_caches_inited)''')
 
+edit('libretro/libretro_core_options.h',
+     '#if defined(_3DS) && (HAVE_DYNAREC)\n   if(!__ctr_svchax)',
+     '#if defined(_3DS) && (HAVE_DYNAREC) && !defined(AZAHAR_TEST)\n   if(!__ctr_svchax)')
+
 edit('Makefile',
      '\tCFLAGS += -DARM11 -D_3DS\n',
      '\tCFLAGS += -DARM11 -D_3DS -DAZAHAR_TEST\n')
