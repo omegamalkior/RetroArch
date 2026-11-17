@@ -2192,6 +2192,30 @@ static u64 gat_win_start     = 0;
 static u64 gat_measure_run   = 0;
 static unsigned gat_frames   = 0;
 static bool gat_done         = false;
+static bool gat_in_run       = false;
+static unsigned gat_cb_depth = 0;
+static u64 gat_cb_t0         = 0;
+static u64 gat_win_cb        = 0;
+static u64 gat_total_cb      = 0;
+static u64 gat_measure_cb    = 0;
+
+void gat_cb_begin(void)
+{
+   if (gat_in_run && gat_cb_depth++ == 0)
+      gat_cb_t0 = svcGetSystemTick();
+}
+
+void gat_cb_end(void)
+{
+   u64 d;
+   if (!gat_in_run || !gat_cb_depth || --gat_cb_depth)
+      return;
+   d             = svcGetSystemTick() - gat_cb_t0;
+   gat_win_cb   += d;
+   gat_total_cb += d;
+   if (gat_frames >= 600)
+      gat_measure_cb += d;
+}
 
 void gat_run_begin(void)
 {
@@ -2207,12 +2231,15 @@ void gat_run_begin(void)
       }
       gat_win_start = svcGetSystemTick();
    }
-   gat_t0 = svcGetSystemTick();
+   gat_cb_depth = 0;
+   gat_in_run   = true;
+   gat_t0       = svcGetSystemTick();
 }
 
 void gat_run_end(void)
 {
    u64 d = svcGetSystemTick() - gat_t0;
+   gat_in_run = false;
    if (gat_done || !gat_log)
       return;
    gat_frames++;
@@ -2224,19 +2251,22 @@ void gat_run_end(void)
    if ((gat_frames % 60) == 0)
    {
       u64 now = svcGetSystemTick();
-      fprintf(gat_log, "frame %u run_ticks_per_frame %llu window_ticks %llu\n",
+      fprintf(gat_log, "frame %u run_ticks_per_frame %llu core_ticks_per_frame %llu window_ticks %llu\n",
             gat_frames, (unsigned long long)(gat_win_run / 60),
+            (unsigned long long)((gat_win_run - gat_win_cb) / 60),
             (unsigned long long)(now - gat_win_start));
       fflush(gat_log);
       gat_win_run   = 0;
+      gat_win_cb    = 0;
       gat_win_start = now;
    }
    if (gat_frames == GAT_LAST_FRAME)
    {
-      fprintf(gat_log, "DONE frames %u avg_run_ticks_per_frame_after_600 %llu avg_all %llu\n",
+      fprintf(gat_log, "DONE frames %u avg_core_ticks_per_frame_after_600 %llu avg_core_all %llu avg_run_ticks_per_frame_after_600 %llu\n",
             gat_frames,
-            (unsigned long long)(gat_measure_run / (GAT_LAST_FRAME - 600)),
-            (unsigned long long)(gat_total_run / gat_frames));
+            (unsigned long long)((gat_measure_run - gat_measure_cb) / (GAT_LAST_FRAME - 600)),
+            (unsigned long long)((gat_total_run - gat_total_cb) / gat_frames),
+            (unsigned long long)(gat_measure_run / (GAT_LAST_FRAME - 600)));
       fclose(gat_log);
       gat_log  = NULL;
       gat_done = true;

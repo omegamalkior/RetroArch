@@ -6789,6 +6789,38 @@ static void core_input_state_poll_maybe(void)
  * Initializes libretro callbacks, and binds the libretro callbacks
  * to default callback functions.
  **/
+#ifdef GPSP_AZAHAR_TEST
+extern void gat_cb_begin(void);
+extern void gat_cb_end(void);
+
+static void gat_video_frame(const void *data, unsigned width,
+      unsigned height, size_t pitch)
+{
+   gat_cb_begin();
+   video_driver_frame(data, width, height, pitch);
+   gat_cb_end();
+}
+
+static size_t gat_sample_batch(const int16_t *data, size_t frames)
+{
+   size_t ret;
+   gat_cb_begin();
+   ret = audio_driver_sample_batch(data, frames);
+   gat_cb_end();
+   return ret;
+}
+
+static void gat_sample(int16_t left, int16_t right)
+{
+   gat_cb_begin();
+   audio_driver_sample(left, right);
+   gat_cb_end();
+}
+#define video_driver_frame        gat_video_frame
+#define audio_driver_sample_batch gat_sample_batch
+#define audio_driver_sample       gat_sample
+#endif
+
 static void core_init_libretro_cbs(runloop_state_t *runloop_st,
       struct retro_callbacks *cbs)
 {
@@ -10996,6 +11028,11 @@ bool core_set_default_callbacks(void *data)
 
    return true;
 }
+#ifdef GPSP_AZAHAR_TEST
+#undef video_driver_frame
+#undef audio_driver_sample_batch
+#undef audio_driver_sample
+#endif
 
 #ifdef HAVE_NETWORKING
 /**
