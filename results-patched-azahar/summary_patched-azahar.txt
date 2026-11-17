@@ -1,0 +1,6 @@
+patched-azahar p_balls : DONE frames 2400 avg_core_ticks_per_frame_after_600 7180812 avg_core_all 7183673 avg_run_ticks_per_frame_after_600 9288997 [100s]
+patched-azahar p_billboard : DONE frames 2400 avg_core_ticks_per_frame_after_600 1190864 avg_core_all 1197813 avg_run_ticks_per_frame_after_600 4476365 [60s]
+patched-azahar p_fpscam : DONE frames 2400 avg_core_ticks_per_frame_after_600 1380422 avg_core_all 1396827 avg_run_ticks_per_frame_after_600 4476145 [60s]
+patched-azahar p_n00bdemo : DONE frames 2400 avg_core_ticks_per_frame_after_600 10708301 avg_core_all 8818799 avg_run_ticks_per_frame_after_600 12823607 [115s]
+patched-azahar t_animated-triangle : DONE frames 2400 avg_core_ticks_per_frame_after_600 985868 avg_core_all 992421 avg_run_ticks_per_frame_after_600 4478543 [60s]
+patched-azahar t_benchmark : DONE frames 2400 avg_core_ticks_per_frame_after_600 1115554 avg_core_all 1127680 avg_run_ticks_per_frame_after_600 4480382 [60s]

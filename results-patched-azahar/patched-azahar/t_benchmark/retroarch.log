@@ -1,0 +1,436 @@
+[INFO] RetroArch 1.22.2 (Git a14d180)
+[INFO] === Build =================================================
+[INFO] Capabilities: 
+[INFO] Version: 1.22.2
+[INFO] Git: a14d180
+[INFO] Built: Nov 17 2026
+[INFO] ===========================================================
+[INFO] [Input] Found input driver: "ctr".
+[INFO] [Override] Redirecting save file to "sdmc:/retroarch/cores/savefiles/PCSX-ReARMed/t_benchmark.srm".
+[INFO] [Override] Redirecting save state to "sdmc:/retroarch/cores/savestates/PCSX-ReARMed/t_benchmark.state".
+[INFO] [Environ] GET_LOG_INTERFACE.
+[INFO] [Environ] SET_CONTROLLER_INFO.
+[DEBUG] Port 1:
+[DEBUG]    "standard" (1)
+[DEBUG]    "dualshock" (517)
+[DEBUG]    "analog" (261)
+[DEBUG]    "negcon" (773)
+[DEBUG]    "guncon" (260)
+[DEBUG]    "konami gun" (516)
+[DEBUG]    "mouse" (258)
+[DEBUG] Port 2:
+[DEBUG]    "standard" (1)
+[DEBUG]    "dualshock" (517)
+[DEBUG]    "analog" (261)
+[DEBUG]    "negcon" (773)
+[DEBUG]    "guncon" (260)
+[DEBUG]    "konami gun" (516)
+[DEBUG]    "mouse" (258)
+[DEBUG] Port 3:
+[DEBUG]    "standard" (1)
+[DEBUG]    "dualshock" (517)
+[DEBUG]    "analog" (261)
+[DEBUG]    "negcon" (773)
+[DEBUG]    "guncon" (260)
+[DEBUG]    "konami gun" (516)
+[DEBUG]    "mouse" (258)
+[DEBUG] Port 4:
+[DEBUG]    "standard" (1)
+[DEBUG]    "dualshock" (517)
+[DEBUG]    "analog" (261)
+[DEBUG]    "negcon" (773)
+[DEBUG]    "guncon" (260)
+[DEBUG]    "konami gun" (516)
+[DEBUG]    "mouse" (258)
+[DEBUG] Port 5:
+[DEBUG]    "standard" (1)
+[DEBUG]    "dualshock" (517)
+[DEBUG]    "analog" (261)
+[DEBUG]    "negcon" (773)
+[DEBUG]    "guncon" (260)
+[DEBUG]    "konami gun" (516)
+[DEBUG]    "mouse" (258)
+[DEBUG] Port 6:
+[DEBUG]    "standard" (1)
+[DEBUG]    "dualshock" (517)
+[DEBUG]    "analog" (261)
+[DEBUG]    "negcon" (773)
+[DEBUG]    "guncon" (260)
+[DEBUG]    "konami gun" (516)
+[DEBUG]    "mouse" (258)
+[DEBUG] Port 7:
+[DEBUG]    "standard" (1)
+[DEBUG]    "dualshock" (517)
+[DEBUG]    "analog" (261)
+[DEBUG]    "negcon" (773)
+[DEBUG]    "guncon" (260)
+[DEBUG]    "konami gun" (516)
+[DEBUG]    "mouse" (258)
+[DEBUG] Port 8:
+[DEBUG]    "standard" (1)
+[DEBUG]    "dualshock" (517)
+[DEBUG]    "analog" (261)
+[DEBUG]    "negcon" (773)
+[DEBUG]    "guncon" (260)
+[DEBUG]    "konami gun" (516)
+[DEBUG]    "mouse" (258)
+[INFO] [Environ] GET_CORE_OPTIONS_VERSION.
+[INFO] [Environ] GET_LANGUAGE: "0".
+[INFO] [Environ] SET_CORE_OPTIONS_V2_INTL.
+[DEBUG] [Environ] SET_CORE_OPTIONS_DISPLAY: pcsx_rearmed_show_input_settings = hidden
+[DEBUG] [Environ] SET_CORE_OPTIONS_DISPLAY: pcsx_rearmed_show_gpu_unai_settings = hidden
+[INFO] [Environ] GET_VFS_INTERFACE. Core requested version >= V3, providing V7.
+[libretro INFO] mem: 0/100663296 heap: 421888 linear: 1612800/16777216 stack: 4194304 exe: 26746076
+[libretro INFO] current sp: 0fffe198 heap: 0x8039740
+[DEBUG] [Environ] GET_MESSAGE_INTERFACE_VERSION.
+[libretro INFO] Starting PCSX-ReARMed 7b0e8f8 (cc 10.2.0 32bit armv6 ari64 gpu=unai)
+[libretro INFO] build time: Nov 17 2026 23:18:17
+[libretro INFO] old fpscr = 63c00010
+[libretro INFO] 4 cpu core(s) detected
+[libretro INFO] new3ds detected, v0.0, AppCpuTimeLimit=35 fpscr=63c00000
+[libretro INFO] psxMap: tried to map @80000000, got 0x13000000
+[libretro INFO] psxMap: tried to map @77000000, got 0x13000000
+[libretro INFO] psxMap: tried to map @1f800000, got 0xf9e0000
+[libretro INFO] psxMap: tried to map @1fc00000, got 0xf960000
+[libretro INFO] Init new dynarec, ndrc size 1001000, pgsize 4096
+[libretro INFO] ndrc config: mul=175, ha=0, pex=0
+[libretro INFO] (0x509258) testing if we can run recompiled code @0x9fb000...
+[libretro INFO] test passed.
+[libretro INFO] RAM is not directly mapped
+[libretro INFO] Mapped (RAM/scrp/ROM/LUTs/TC):
+[libretro INFO] 0x13000000/0xf9e0000/0xf960000/0x0/0x9fb000
+[libretro INFO] psxMap: tried to map @08000000, got 0xf160000
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_bios = "auto"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_show_bios_bootlogo = "disabled"
+[INFO] [Environ] GET_SYSTEM_DIRECTORY: "sdmc:/retroarch/cores/system".
+[libretro INFO] No BIOS files found.
+[WARN] [Environ] SET_MESSAGE_EXT: No PlayStation BIOS file found - add for better compatibility
+[INFO] [Environ] GET_CAN_DUPE: true.
+[INFO] [Environ] GET_DISK_CONTROL_INTERFACE_VERSION.
+[INFO] [Environ] SET_DISK_CONTROL_EXT_INTERFACE.
+[INFO] [Environ] GET_RUMBLE_INTERFACE.
+[DEBUG] [Environ] SET_PERFORMANCE_LEVEL: 6 (Deprecated).
+[INFO] [Content] Content loading skipped. Implementation will load it on its own.
+[INFO] [Environ] SET_INPUT_DESCRIPTORS.
+[DEBUG] Port 1:
+[DEBUG]    "D-Pad Up" => "D-Pad Up"
+[DEBUG]    "D-Pad Down" => "D-Pad Down"
+[DEBUG]    "D-Pad Left" => "D-Pad Left"
+[DEBUG]    "D-Pad Right" => "D-Pad Right"
+[DEBUG]    "B Button (Down)" => "Cross"
+[DEBUG]    "A Button (Right)" => "Circle"
+[DEBUG]    "Y Button (Left)" => "Square"
+[DEBUG]    "X Button (Top)" => "Triangle"
+[DEBUG]    "Select Button" => "Select"
+[DEBUG]    "Start Button" => "Start"
+[DEBUG]    "L Button (Shoulder)" => "L1"
+[DEBUG]    "R Button (Shoulder)" => "R1"
+[DEBUG]    "L2 Button (Trigger)" => "L2"
+[DEBUG]    "R2 Button (Trigger)" => "R2"
+[DEBUG]    "L3 Button (Thumb)" => "L3"
+[DEBUG]    "R3 Button (Thumb)" => "R3"
+[DEBUG]    "Left Analog Y- (Up)" => "Left Analog Y"
+[DEBUG]    "Left Analog Y+ (Down)" => "Left Analog Y"
+[DEBUG]    "Left Analog X- (Left)" => "Left Analog X"
+[DEBUG]    "Left Analog X+ (Right)" => "Left Analog X"
+[DEBUG]    "Right Analog Y- (Up)" => "Right Analog Y"
+[DEBUG]    "Right Analog Y+ (Down)" => "Right Analog Y"
+[DEBUG]    "Right Analog X- (Left)" => "Right Analog X"
+[DEBUG]    "Right Analog X+ (Right)" => "Right Analog X"
+[DEBUG] Port 2:
+[DEBUG]    "D-Pad Up" => "D-Pad Up"
+[DEBUG]    "D-Pad Down" => "D-Pad Down"
+[DEBUG]    "D-Pad Left" => "D-Pad Left"
+[DEBUG]    "D-Pad Right" => "D-Pad Right"
+[DEBUG]    "B Button (Down)" => "Cross"
+[DEBUG]    "A Button (Right)" => "Circle"
+[DEBUG]    "Y Button (Left)" => "Square"
+[DEBUG]    "X Button (Top)" => "Triangle"
+[DEBUG]    "Select Button" => "Select"
+[DEBUG]    "Start Button" => "Start"
+[DEBUG]    "L Button (Shoulder)" => "L1"
+[DEBUG]    "R Button (Shoulder)" => "R1"
+[DEBUG]    "L2 Button (Trigger)" => "L2"
+[DEBUG]    "R2 Button (Trigger)" => "R2"
+[DEBUG]    "L3 Button (Thumb)" => "L3"
+[DEBUG]    "R3 Button (Thumb)" => "R3"
+[DEBUG]    "Left Analog Y- (Up)" => "Left Analog Y"
+[DEBUG]    "Left Analog Y+ (Down)" => "Left Analog Y"
+[DEBUG]    "Left Analog X- (Left)" => "Left Analog X"
+[DEBUG]    "Left Analog X+ (Right)" => "Left Analog X"
+[DEBUG]    "Right Analog Y- (Up)" => "Right Analog Y"
+[DEBUG]    "Right Analog Y+ (Down)" => "Right Analog Y"
+[DEBUG]    "Right Analog X- (Left)" => "Right Analog X"
+[DEBUG]    "Right Analog X+ (Right)" => "Right Analog X"
+[DEBUG] Port 3:
+[DEBUG]    "D-Pad Up" => "D-Pad Up"
+[DEBUG]    "D-Pad Down" => "D-Pad Down"
+[DEBUG]    "D-Pad Left" => "D-Pad Left"
+[DEBUG]    "D-Pad Right" => "D-Pad Right"
+[DEBUG]    "B Button (Down)" => "Cross"
+[DEBUG]    "A Button (Right)" => "Circle"
+[DEBUG]    "Y Button (Left)" => "Square"
+[DEBUG]    "X Button (Top)" => "Triangle"
+[DEBUG]    "Select Button" => "Select"
+[DEBUG]    "Start Button" => "Start"
+[DEBUG]    "L Button (Shoulder)" => "L1"
+[DEBUG]    "R Button (Shoulder)" => "R1"
+[DEBUG]    "L2 Button (Trigger)" => "L2"
+[DEBUG]    "R2 Button (Trigger)" => "R2"
+[DEBUG]    "L3 Button (Thumb)" => "L3"
+[DEBUG]    "R3 Button (Thumb)" => "R3"
+[DEBUG]    "Left Analog Y- (Up)" => "Left Analog Y"
+[DEBUG]    "Left Analog Y+ (Down)" => "Left Analog Y"
+[DEBUG]    "Left Analog X- (Left)" => "Left Analog X"
+[DEBUG]    "Left Analog X+ (Right)" => "Left Analog X"
+[DEBUG]    "Right Analog Y- (Up)" => "Right Analog Y"
+[DEBUG]    "Right Analog Y+ (Down)" => "Right Analog Y"
+[DEBUG]    "Right Analog X- (Left)" => "Right Analog X"
+[DEBUG]    "Right Analog X+ (Right)" => "Right Analog X"
+[DEBUG] Port 4:
+[DEBUG]    "D-Pad Up" => "D-Pad Up"
+[DEBUG]    "D-Pad Down" => "D-Pad Down"
+[DEBUG]    "D-Pad Left" => "D-Pad Left"
+[DEBUG]    "D-Pad Right" => "D-Pad Right"
+[DEBUG]    "B Button (Down)" => "Cross"
+[DEBUG]    "A Button (Right)" => "Circle"
+[DEBUG]    "Y Button (Left)" => "Square"
+[DEBUG]    "X Button (Top)" => "Triangle"
+[DEBUG]    "Select Button" => "Select"
+[DEBUG]    "Start Button" => "Start"
+[DEBUG]    "L Button (Shoulder)" => "L1"
+[DEBUG]    "R Button (Shoulder)" => "R1"
+[DEBUG]    "L2 Button (Trigger)" => "L2"
+[DEBUG]    "R2 Button (Trigger)" => "R2"
+[DEBUG]    "L3 Button (Thumb)" => "L3"
+[DEBUG]    "R3 Button (Thumb)" => "R3"
+[DEBUG]    "Left Analog Y- (Up)" => "Left Analog Y"
+[DEBUG]    "Left Analog Y+ (Down)" => "Left Analog Y"
+[DEBUG]    "Left Analog X- (Left)" => "Left Analog X"
+[DEBUG]    "Left Analog X+ (Right)" => "Left Analog X"
+[DEBUG]    "Right Analog Y- (Up)" => "Right Analog Y"
+[DEBUG]    "Right Analog Y+ (Down)" => "Right Analog Y"
+[DEBUG]    "Right Analog X- (Left)" => "Right Analog X"
+[DEBUG]    "Right Analog X+ (Right)" => "Right Analog X"
+[DEBUG] Port 5:
+[DEBUG]    "D-Pad Up" => "D-Pad Up"
+[DEBUG]    "D-Pad Down" => "D-Pad Down"
+[DEBUG]    "D-Pad Left" => "D-Pad Left"
+[DEBUG]    "D-Pad Right" => "D-Pad Right"
+[DEBUG]    "B Button (Down)" => "Cross"
+[DEBUG]    "A Button (Right)" => "Circle"
+[DEBUG]    "Y Button (Left)" => "Square"
+[DEBUG]    "X Button (Top)" => "Triangle"
+[DEBUG]    "Select Button" => "Select"
+[DEBUG]    "Start Button" => "Start"
+[DEBUG]    "L Button (Shoulder)" => "L1"
+[DEBUG]    "R Button (Shoulder)" => "R1"
+[DEBUG]    "L2 Button (Trigger)" => "L2"
+[DEBUG]    "R2 Button (Trigger)" => "R2"
+[DEBUG]    "L3 Button (Thumb)" => "L3"
+[DEBUG]    "R3 Button (Thumb)" => "R3"
+[DEBUG]    "Left Analog Y- (Up)" => "Left Analog Y"
+[DEBUG]    "Left Analog Y+ (Down)" => "Left Analog Y"
+[DEBUG]    "Left Analog X- (Left)" => "Left Analog X"
+[DEBUG]    "Left Analog X+ (Right)" => "Left Analog X"
+[DEBUG]    "Right Analog Y- (Up)" => "Right Analog Y"
+[DEBUG]    "Right Analog Y+ (Down)" => "Right Analog Y"
+[DEBUG]    "Right Analog X- (Left)" => "Right Analog X"
+[DEBUG]    "Right Analog X+ (Right)" => "Right Analog X"
+[DEBUG] Port 6:
+[DEBUG]    "D-Pad Up" => "D-Pad Up"
+[DEBUG]    "D-Pad Down" => "D-Pad Down"
+[DEBUG]    "D-Pad Left" => "D-Pad Left"
+[DEBUG]    "D-Pad Right" => "D-Pad Right"
+[DEBUG]    "B Button (Down)" => "Cross"
+[DEBUG]    "A Button (Right)" => "Circle"
+[DEBUG]    "Y Button (Left)" => "Square"
+[DEBUG]    "X Button (Top)" => "Triangle"
+[DEBUG]    "Select Button" => "Select"
+[DEBUG]    "Start Button" => "Start"
+[DEBUG]    "L Button (Shoulder)" => "L1"
+[DEBUG]    "R Button (Shoulder)" => "R1"
+[DEBUG]    "L2 Button (Trigger)" => "L2"
+[DEBUG]    "R2 Button (Trigger)" => "R2"
+[DEBUG]    "L3 Button (Thumb)" => "L3"
+[DEBUG]    "R3 Button (Thumb)" => "R3"
+[DEBUG]    "Left Analog Y- (Up)" => "Left Analog Y"
+[DEBUG]    "Left Analog Y+ (Down)" => "Left Analog Y"
+[DEBUG]    "Left Analog X- (Left)" => "Left Analog X"
+[DEBUG]    "Left Analog X+ (Right)" => "Left Analog X"
+[DEBUG]    "Right Analog Y- (Up)" => "Right Analog Y"
+[DEBUG]    "Right Analog Y+ (Down)" => "Right Analog Y"
+[DEBUG]    "Right Analog X- (Left)" => "Right Analog X"
+[DEBUG]    "Right Analog X+ (Right)" => "Right Analog X"
+[DEBUG] Port 7:
+[DEBUG]    "D-Pad Up" => "D-Pad Up"
+[DEBUG]    "D-Pad Down" => "D-Pad Down"
+[DEBUG]    "D-Pad Left" => "D-Pad Left"
+[DEBUG]    "D-Pad Right" => "D-Pad Right"
+[DEBUG]    "B Button (Down)" => "Cross"
+[DEBUG]    "A Button (Right)" => "Circle"
+[DEBUG]    "Y Button (Left)" => "Square"
+[DEBUG]    "X Button (Top)" => "Triangle"
+[DEBUG]    "Select Button" => "Select"
+[DEBUG]    "Start Button" => "Start"
+[DEBUG]    "L Button (Shoulder)" => "L1"
+[DEBUG]    "R Button (Shoulder)" => "R1"
+[DEBUG]    "L2 Button (Trigger)" => "L2"
+[DEBUG]    "R2 Button (Trigger)" => "R2"
+[DEBUG]    "L3 Button (Thumb)" => "L3"
+[DEBUG]    "R3 Button (Thumb)" => "R3"
+[DEBUG]    "Left Analog Y- (Up)" => "Left Analog Y"
+[DEBUG]    "Left Analog Y+ (Down)" => "Left Analog Y"
+[DEBUG]    "Left Analog X- (Left)" => "Left Analog X"
+[DEBUG]    "Left Analog X+ (Right)" => "Left Analog X"
+[DEBUG]    "Right Analog Y- (Up)" => "Right Analog Y"
+[DEBUG]    "Right Analog Y+ (Down)" => "Right Analog Y"
+[DEBUG]    "Right Analog X- (Left)" => "Right Analog X"
+[DEBUG]    "Right Analog X+ (Right)" => "Right Analog X"
+[DEBUG] Port 8:
+[DEBUG]    "D-Pad Up" => "D-Pad Up"
+[DEBUG]    "D-Pad Down" => "D-Pad Down"
+[DEBUG]    "D-Pad Left" => "D-Pad Left"
+[DEBUG]    "D-Pad Right" => "D-Pad Right"
+[DEBUG]    "B Button (Down)" => "Cross"
+[DEBUG]    "A Button (Right)" => "Circle"
+[DEBUG]    "Y Button (Left)" => "Square"
+[DEBUG]    "X Button (Top)" => "Triangle"
+[DEBUG]    "Select Button" => "Select"
+[DEBUG]    "Start Button" => "Start"
+[DEBUG]    "L Button (Shoulder)" => "L1"
+[DEBUG]    "R Button (Shoulder)" => "R1"
+[DEBUG]    "L2 Button (Trigger)" => "L2"
+[DEBUG]    "R2 Button (Trigger)" => "R2"
+[DEBUG]    "L3 Button (Thumb)" => "L3"
+[DEBUG]    "R3 Button (Thumb)" => "R3"
+[DEBUG]    "Left Analog Y- (Up)" => "Left Analog Y"
+[DEBUG]    "Left Analog Y+ (Down)" => "Left Analog Y"
+[DEBUG]    "Left Analog X- (Left)" => "Left Analog X"
+[DEBUG]    "Left Analog X+ (Right)" => "Left Analog X"
+[DEBUG]    "Right Analog Y- (Up)" => "Right Analog Y"
+[DEBUG]    "Right Analog Y+ (Down)" => "Right Analog Y"
+[DEBUG]    "Right Analog X- (Left)" => "Right Analog X"
+[DEBUG]    "Right Analog X+ (Right)" => "Right Analog X"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_rgb32_output = "disabled"
+[INFO] [Environ] SET_PIXEL_FORMAT: RGB565.
+[libretro INFO] Using PIXEL_FORMAT 2
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_frameskip_type = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_frameskip_threshold = "33"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_frameskip_interval = "3"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_region = "auto"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_multitap = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_negcon_deadzone = "0"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_negcon_response = "linear"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_analog_axis_modifier = "square"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_vibration = "enabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_analog_combo = "l1+r1+select"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_dithering = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_display_fps_v2 = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_display_info = "enabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_cd_turbo = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_cd_readahead = "12"
+[libretro INFO] threadCreate: pcsxt 0 core 1 stack 65536: 0x806e0e0
+[libretro INFO] cdrom precache: 12 buffers
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_drc = "enabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_psxclock = "auto"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_drc_thread = "auto"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_nosmccheck = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gteregsunneeded = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_nogteflags = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_nocompathacks = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_nolddelay = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_nostalls = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_icache_emulation = "enabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_exception_emulation = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_spu_reverb = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_spu_interpolation = "off"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_spu_thread = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_noxadecoding = "enabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_nocdaudio = "enabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gpu_slow_llists = "auto"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_fractional_framerate = "auto"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_alt_flip = "auto"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_screen_centering = "auto"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_screen_centering_x = "0"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_screen_centering_y = "0"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_screen_centering_h_adj = "0"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_show_overscan = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_scale_hires = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gpu_thread_rendering = "auto"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gpu_unai_old_renderer = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gpu_unai_skipline = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gpu_unai_lighting = "enabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gpu_unai_fast_lighting = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gpu_unai_blending = "enabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_crosshair1 = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_crosshair2 = "disabled"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_konamigunadjustx = "0"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_konamigunadjusty = "0"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gunconadjustx = "0"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gunconadjusty = "0"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gunconadjustratiox = "1.00"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_gunconadjustratioy = "1.00"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_input_sensitivity = "1.00"
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_3ds_appcputime = "35"
+[libretro INFO] plugin: /builtin_gpu
+[libretro INFO] plugin: /builtin_spu
+[libretro INFO] Plugins loaded.
+[libretro INFO] Loaded CD Image: sdmc:/retroarch/e2e/t_benchmark.exe[2048] (75776 bytes).
+[libretro INFO] Track 01 DATA  - Start 00:02:00, Length 00:00:37
+[libretro INFO] End 00:02:37 (sector 187)
+[libretro INFO] threadCreate: pcsxt 0 core 1 stack 65536: 0x81434f0
+[libretro INFO] cdrom precache: 12 buffers
+[INFO] [Environ] GET_SAVE_DIRECTORY: "sdmc:/retroarch/cores/savefiles/PCSX-ReARMed".
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_memcard1 = "libretro"
+[libretro INFO] memcard 1 is libretro-managed
+[DEBUG] [Environ] GET_VARIABLE: pcsx_rearmed_memcard2 = "shared"
+[libretro INFO] The memory card sdmc:/retroarch/cores/savefiles/PCSX-ReARMed/pcsx-card2.mcd doesn't exist - creating it
+[libretro INFO] threadCreate: pcsxt 2 core 2 stack 65536: 0x8174678
+[libretro INFO] Init new dynarec, ndrc size 1001000, pgsize 4096
+[libretro INFO] (0x509258) testing if we can run recompiled code @0x9fb000...
+[libretro INFO] test passed.
+[libretro INFO] RAM is not directly mapped
+[libretro INFO] Mapped (RAM/scrp/ROM/LUTs/TC):
+[libretro INFO] 0x13000000/0xf9e0000/0xf960000/0xf160000/0x9fb000
+[libretro INFO] psxMap: tried to map @08000000, got 0xf160000
+[libretro INFO] HLE BIOS initialized.
+[libretro INFO] note: running with HLE BIOS, expect compatibility problems
+[libretro INFO] ----------------------------------------------------------
+[INFO] [Environ] SET_MEMORY_MAPS.
+[DEBUG] ndx flags  ptr          offset   start    select   disconn  len      addrspace
+[DEBUG] 001 M1A1bc 0x13000000 00000000 00000000 5FE00000 20000000 00200000 
+[DEBUG] 002 M1A1bc 0xf9e0000 00000000 1F800000 7FFFFC00 00000000 00000400 
+[INFO] [Environ] SET_AUDIO_BUFFER_STATUS_CALLBACK.
+[libretro INFO] mem: 0/100663296 heap: 1662976 linear: 3976192/16777216 stack: 4194304 exe: 26746076
+[libretro INFO] current sp: 0fffbbe8 heap: 0x8185760
+[INFO] [SRAM] Skipping SRAM load.
+[INFO] [Core] Version of libretro API: 1, Compiled against API: 1
+[INFO] [Core] Geometry: 256x240, Aspect: 1.3333, FPS: 60.0000, Sample rate: 44100 Hz.
+[INFO] [Video] Set video size to: 960x720.
+[INFO] [Audio] Set audio input rate to: 43977.98 Hz.
+[INFO] [Input] Found joypad driver: "ctr".
+[INFO] [Video] Found display server: "null".
+[DEBUG] [Autoconf] Config files scanned: driver "ctr", name "3DS Controller" (0000/0000), phys "", affinity 0.
+[INFO] [Autoconf] 3DS Controller configured in port 1.
+[INFO] [Audio] Set audio input rate to: 43977.98 Hz.
+[INFO] [Audio] Threaded pipeline: Ring holds 4096 frames of int16 core audio.
+[INFO] [Audio] Starting threaded audio driver...
+[INFO] [Audio] Audio thread priority raised.
+[WARN] [Audio] Driver "dsp" has not returned from init after 2 seconds; the device is not opening.
+[INFO] [Audio] Driver "dsp" reports a 8192-byte buffer: 62.6 ms of 2-channel int16 at 32728 Hz against a 64 ms latency setting; rate control is off; on, it would hold it near 31.3 ms.
+[DEBUG] [Audio] Started audio driver: "dsp".
+[INFO] [Display] Found display driver: "ctr".
+[INFO] [Playlist] Loading favorites file: "sdmc:/retroarch/cores/playlists/builtin/content_favorites.lpl".
+[INFO] [Playlist] Loading history file: "sdmc:/retroarch/cores/playlists/builtin/content_history.lpl".
+[INFO] [Playlist] Loading history file: "sdmc:/retroarch/cores/playlists/builtin/content_image_history.lpl".
+[INFO] [Playlist] Loading history file: "sdmc:/retroarch/cores/playlists/builtin/content_music_history.lpl".
+[ERROR] [Playlist] Cannot push NULL or empty core path into the playlist.
+[INFO] [Input] Controllers of the "ctr" driver are read through a snapshot taken once a poll.
+[INFO] [Environ] SET_MINIMUM_AUDIO_LATENCY.
+[DEBUG] [Environ] SET_GEOMETRY: 640x480, Aspect: 1.333.
+[DEBUG] [Autoconf] First unconfigured / unreserved player is 1.
+[DEBUG] [Autoconf] Device "3DS Controller" (0:0) is not reserved for any player slot.
+[INFO] [Input] Device 1, "3DS Controller" (0000:0000, ctr): new, in slot 0.
+[INFO] [Audio] Resampler "sinc" path: "float".
+[DEBUG] [Environ] SET_GEOMETRY: 320x240, Aspect: 1.333.
