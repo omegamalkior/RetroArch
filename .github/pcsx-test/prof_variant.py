@@ -188,7 +188,7 @@ edit('Makefile.libretro',
 edit('plugins/gpu_unai/gpulib_if.cpp',
      '#include <stdio.h>\n',
      '#include <stdio.h>\n'
-     '#include <3ds/types.h>\n#include <3ds/svc.h>\n'
+     'extern "C" {\n#include <3ds/types.h>\n#include <3ds/svc.h>\n}\n'
      'extern "C" u64 prof3ds_gcmd_ticks[256], prof3ds_spr_ticks[512];\n'
      'extern "C" u32 prof3ds_gcmd_cnt[256], prof3ds_spr_cnt[512];\n')
 edit('plugins/gpu_unai/gpulib_if.cpp',
