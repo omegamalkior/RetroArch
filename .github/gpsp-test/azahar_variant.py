@@ -15,11 +15,11 @@ root = sys.argv[1]
 
 def edit(path, old, new, count=1):
     p = root + '/' + path
-    s = open(p).read()
+    s = open(p, encoding='latin-1').read()
     n = s.count(old)
     if n != count:
         sys.exit('%s: expected %d match(es), found %d for:\n%s' % (path, count, n, old))
-    open(p, 'w').write(s.replace(old, new))
+    open(p, 'w', encoding='latin-1').write(s.replace(old, new))
 
 
 edit('cpu.h',
