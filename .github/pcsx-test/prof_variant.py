@@ -121,7 +121,7 @@ edit('frontend/libretro.c',
 ''')
 edit('frontend/libretro.c',
      'void retro_run(void)\n{\n',
-     'void prof3ds_push(int id);\nvoid prof3ds_pop(void);\nvoid prof3ds_run_begin(void);\nvoid prof3ds_run_end(void);\n'
+     'void prof3ds_run_begin(void);\nvoid prof3ds_run_end(void);\n'
      'static void retro_run_real(void);\nvoid retro_run(void)\n{\n   prof3ds_run_begin();\n   retro_run_real();\n   prof3ds_run_end();\n}\n'
      'static void retro_run_real(void)\n{\n')
 edit('frontend/libretro.c',
@@ -132,6 +132,7 @@ edit('frontend/libretro.c',
      '   .pl_vout_flip     = vout_flip_prof,\n')
 edit('frontend/libretro.c',
      'struct rearmed_cbs pl_rearmed_cbs = {\n',
+     'void prof3ds_push(int id);\nvoid prof3ds_pop(void);\n'
      'static void vout_flip_prof(const void *vram_, int vram_ofs, int bgr24,\n'
      '      int x, int y, int w, int h, int dims_changed)\n'
      '{\n   prof3ds_push(4);\n   vout_flip(vram_, vram_ofs, bgr24, x, y, w, h, dims_changed);\n   prof3ds_pop();\n}\n\n'
