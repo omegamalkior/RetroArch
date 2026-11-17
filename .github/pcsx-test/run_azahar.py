@@ -63,6 +63,9 @@ for name in sorted(os.listdir(content_dir)):
     if not name.lower().endswith(('.exe', '.cue', '.chd', '.pbp', '.m3u')):
         continue
     stem = os.path.splitext(name)[0]
+    only = os.environ.get('ONLY', '').split()
+    if only and stem not in only:
+        continue
     home = os.path.abspath('az_home_%s%s_%s' % (variant, tag, stem))
     shutil.rmtree(home, ignore_errors=True)
     data = os.path.join(home, 'data', 'azahar-emu')
@@ -89,7 +92,11 @@ for name in sorted(os.listdir(content_dir)):
     env['QT_QPA_PLATFORM'] = 'xcb'
     print('== %s / %s' % (variant, name), flush=True)
     t0 = time.time()
-    p = subprocess.Popen([azahar, os.path.abspath(app)], env=env,
+    profile = int(os.environ.get('PROFILE_SAMPLES', '0'))
+    argv = [azahar]
+    if profile:
+        argv += ['-g', '24689']
+    p = subprocess.Popen(argv + [os.path.abspath(app)], env=env,
                          stdout=open(os.path.join(home, 'stdout.txt'), 'w'),
                          stderr=subprocess.STDOUT)
     result = 'did not finish'
@@ -101,6 +108,12 @@ for name in sorted(os.listdir(content_dir)):
             if lines:
                 last_line = lines[-1]
             done = [l for l in lines if l.startswith('DONE')]
+            if profile and any(l.startswith('frame 600 ') for l in lines):
+                samples = os.path.join(home, 'samples.txt')
+                subprocess.call([sys.executable, os.path.join(os.path.dirname(__file__), 'gdb_sample.py'),
+                                 '24689', str(profile), samples], timeout=frames_timeout)
+                result = 'profiled'
+                break
             if done:
                 result = done[0]
                 break
@@ -127,7 +140,8 @@ for name in sorted(os.listdir(content_dir)):
             shutil.copy(os.path.join(out, f), dest)
     for src, dst in ((os.path.join(sdmc, 'retroarch', 'logs', 'retroarch.log'), 'retroarch.log'),
                      (os.path.join(data, 'log', 'azahar_log.txt'), 'azahar_log.txt'),
-                     (os.path.join(home, 'stdout.txt'), 'azahar_stdout.txt')):
+                     (os.path.join(home, 'stdout.txt'), 'azahar_stdout.txt'),
+                     (os.path.join(home, 'samples.txt'), 'samples.txt')):
         if os.path.exists(src):
             shutil.copy(src, os.path.join(dest, dst))
 

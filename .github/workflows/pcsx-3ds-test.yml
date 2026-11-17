@@ -10,6 +10,10 @@ permissions:
 
 env:
   PCSX_SHA: 7b0e8f8fadfbce3d170d195b9d9eecaabfa08c8e
+  # what the test job does this time
+  RUN_TIMING: 0
+  RUN_PROFILE: 1
+  PROFILE_ONLY: p_balls p_n00bdemo p_fpscam
 
 jobs:
   content:
@@ -75,6 +79,7 @@ jobs:
         make -f Makefile.ctr -j$(getconf _NPROCESSORS_ONLN) USE_CTRULIB_2=1 LIBRETRO=pcsx_rearmed $EXTRA
         cp retroarch_3ds.3dsx out/pcsx_$NAME.3dsx
         cp retroarch_3ds.cia out/pcsx_$NAME.cia
+        $DEVKITARM/bin/arm-none-eabi-nm -n -C retroarch_3ds.elf > out/pcsx_$NAME.nm
         ls -la out
         SCRIPT
         docker run --rm --user root -v "$PWD:/w" -w /w \
@@ -89,6 +94,16 @@ jobs:
     needs: [content, build]
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: original-azahar
+            tag: ''
+          - variant: patched-azahar
+            tag: ''
+          - variant: original-azahar
+            tag: -run2
     steps:
     - uses: actions/checkout@v4
     - uses: actions/download-artifact@v4
@@ -105,25 +120,33 @@ jobs:
         gh release download -R azahar-emu/azahar -p 'azahar.AppImage'
         chmod +x azahar.AppImage
         ./azahar.AppImage --appimage-extract >/dev/null
-        ls squashfs-root | head
     - name: Run in Azahar
       run: |
         Xvfb :99 -screen 0 1280x720x24 &
         export DISPLAY=:99
         sleep 2
-        ls -la dl/content
+        v=${{ matrix.variant }}
+        t='${{ matrix.tag }}'
         mkdir -p results
-        for v in original-azahar patched-azahar; do
+        if [ "$RUN_TIMING" = "1" ]; then
           python3 .github/pcsx-test/run_azahar.py squashfs-root/AppRun $v \
-            dl/pcsx-$v/pcsx_$v.3dsx dl/content results || true
-        done
-        python3 .github/pcsx-test/run_azahar.py squashfs-root/AppRun original-azahar \
-          dl/pcsx-original-azahar/pcsx_original-azahar.3dsx dl/content results -run2 || true
-        cat results/summary_*.txt
+            dl/pcsx-$v/pcsx_$v.3dsx dl/content results "$t" || true
+        fi
+        if [ "$RUN_PROFILE" = "1" ] && [ -z "$t" ]; then
+          PROFILE_SAMPLES=600 ONLY="$PROFILE_ONLY" python3 .github/pcsx-test/run_azahar.py \
+            squashfs-root/AppRun $v dl/pcsx-$v/pcsx_$v.3dsx dl/content results -prof || true
+          for d in results/$v-prof/*/; do
+            [ -f "$d/samples.txt" ] || continue
+            python3 .github/pcsx-test/profile_report.py dl/pcsx-$v/pcsx_$v.nm \
+              "$d/samples.txt" "$d/retroarch.log" > "$d/profile.txt" || true
+            echo "=== $d"; head -60 "$d/profile.txt"
+          done
+        fi
+        cat results/summary_*.txt || true
     - uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: results
+        name: results-${{ matrix.variant }}${{ matrix.tag }}
         path: results/
 
   # Test-only transport: artifact storage isn't reachable from where the
