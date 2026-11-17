@@ -406,6 +406,15 @@ else ifeq ($(LIBRETRO), mednafen_vb)
 	APP_ICON             = pkg/ctr/assets/mednafen_vb.png
 	APP_BANNER           = pkg/ctr/assets/mednafen_vb_banner.png
 
+else ifeq ($(LIBRETRO), mgba_dynarec)
+	APP_TITLE            = mGBA Dynarec
+	APP_AUTHOR           = Jeffrey Pfau
+	APP_PRODUCT_CODE     = RARCH-MGBADYN
+	APP_UNIQUE_ID        = 0xBADA1
+	APP_RSF              = pkg/ctr/tools/template_dynarec.rsf
+	APP_ICON             = pkg/ctr/assets/mgba.png
+	APP_BANNER           = pkg/ctr/assets/mgba_banner.png
+
 else ifeq ($(LIBRETRO), mgba)
 	APP_TITLE            = mGBA Libretro
 	APP_AUTHOR           = Jeffrey Pfau

@@ -7589,6 +7589,18 @@ int main(int argc, char *argv[])
    if (argc == 2 && winusb_bind_command(argv[1], &ret))
       return ret;
 #endif
+#if defined(_3DS) && defined(RA_FORWARD_CONTENT)
+   /* Forwarder builds: boot straight into one piece of content
+    * (set at build time with -DRA_FORWARD_CONTENT="\"sdmc:/path\"") */
+   if (argc < 2)
+   {
+      static char *forward_argv[3];
+      forward_argv[0] = argc > 0 ? argv[0] : (char*)"retroarch";
+      forward_argv[1] = (char*)RA_FORWARD_CONTENT;
+      forward_argv[2] = NULL;
+      return rarch_main(2, forward_argv, NULL);
+   }
+#endif
    return rarch_main(argc, argv, NULL);
 }
 #endif
