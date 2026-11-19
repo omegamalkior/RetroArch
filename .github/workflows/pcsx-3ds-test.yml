@@ -39,19 +39,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: original-azahar
-            patch: 0
-            azahar: 1
-          - name: patched-azahar
-            patch: 1
-            azahar: 1
-          - name: patched-3ds
-            patch: 1
-            azahar: 0
-          - name: prof-azahar
-            patch: 1
-            azahar: 1
-            prof: 1
+          - { name: original-azahar, patches: '', kind: azahar }
+          - { name: lit-azahar, patches: lit, kind: azahar }
+          - { name: mask-azahar, patches: mask, kind: azahar }
+          - { name: poly-azahar, patches: poly, kind: azahar }
+          - { name: all-azahar, patches: all, kind: azahar }
+          - { name: original-hw, patches: '', kind: hw, id: '0xBC150' }
+          - { name: lit-hw, patches: lit, kind: hw, id: '0xBC151' }
+          - { name: mask-hw, patches: mask, kind: hw, id: '0xBC152' }
+          - { name: poly-hw, patches: poly, kind: hw, id: '0xBC153' }
+          - { name: all-hw, patches: all, kind: hw, id: '0xBC154' }
+          - { name: all-3ds, patches: all, kind: release }
     steps:
     - uses: actions/checkout@v4
     - name: Build (${{ matrix.name }})
@@ -62,35 +60,29 @@ jobs:
         git init -q /tmp/pcsx && cd /tmp/pcsx
         git remote add origin https://github.com/libretro/pcsx_rearmed.git
         git fetch -q --depth 1 origin "$PCSX_SHA" && git checkout -q FETCH_HEAD
-        if [ "$PATCH" = "1" ]; then
-          for p in /w/.github/pcsx-test/patches/*.patch; do
-            [ -s "$p" ] && git apply -v "$p"
-          done
+        if [ -n "$PATCHES" ]; then
+          for p in /w/.github/pcsx-test/patches/$PATCHES/*.patch; do git apply -v "$p"; done
         fi
-        if [ "$AZAHAR" = "1" ]; then
+        if [ "$KIND" = "azahar" ]; then
           python3 /w/.github/pcsx-test/azahar_variant.py .
-        fi
-        if [ "$PROF" = "1" ]; then
-          python3 /w/.github/pcsx-test/prof_variant.py .
         fi
         git diff --stat
         make -f Makefile.libretro platform=ctr -j$(getconf _NPROCESSORS_ONLN)
         cp pcsx_rearmed_libretro_ctr.a /w/libretro_ctr.a
         cd /w
         mkdir -p out
-        if [ "$AZAHAR" = "1" ]; then
-          EXTRA="GPSP_AZAHAR_TEST=1 GPSP_TEST_VARIANT=$NAME APP_USE_SVCHAX=0"
-        else
-          EXTRA=""
-        fi
+        case "$KIND" in
+          azahar) EXTRA="GPSP_AZAHAR_TEST=1 GPSP_TEST_VARIANT=$NAME APP_USE_SVCHAX=0" ;;
+          hw) EXTRA="HW_TIMING=1 GPSP_TEST_VARIANT=$NAME APP_UNIQUE_ID=$ID APP_PRODUCT_CODE=RARCH-PCSXT${ID: -1} APP_TITLE=PCSX-timing-$NAME" ;;
+          *) EXTRA="" ;;
+        esac
         make -f Makefile.ctr -j$(getconf _NPROCESSORS_ONLN) USE_CTRULIB_2=1 LIBRETRO=pcsx_rearmed $EXTRA
         cp retroarch_3ds.3dsx out/pcsx_$NAME.3dsx
         cp retroarch_3ds.cia out/pcsx_$NAME.cia
-        $DEVKITARM/bin/arm-none-eabi-nm -n -C retroarch_3ds.elf > out/pcsx_$NAME.nm
         ls -la out
         SCRIPT
         docker run --rm --user root -v "$PWD:/w" -w /w \
-          -e PATCH=${{ matrix.patch }} -e AZAHAR=${{ matrix.azahar }} -e NAME=${{ matrix.name }} -e PROF=${{ matrix.prof }} -e PCSX_SHA \
+          -e PATCHES=${{ matrix.patches }} -e KIND=${{ matrix.kind }} -e NAME=${{ matrix.name }} -e ID=${{ matrix.id }} -e PCSX_SHA \
           reallibretroretroarch/libretro-build-devkitpro:latest bash /w/build.sh
     - uses: actions/upload-artifact@v4
       with:
@@ -104,15 +96,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - variant: original-azahar
-            tag: ''
-          - variant: patched-azahar
-            tag: ''
-          - variant: original-azahar
-            tag: -sync
-          - variant: patched-azahar
-            tag: -sync
+        variant: [original-azahar, lit-azahar, mask-azahar, poly-azahar, all-azahar]
+        tag: ['', -sync]
     steps:
     - uses: actions/checkout@v4
     - uses: actions/download-artifact@v4
@@ -176,9 +161,12 @@ jobs:
         merge-multiple: true
     - name: Compare original and patched
       run: |
-        python3 .github/pcsx-test/compare_frames.py r original-azahar patched-azahar | tee r/compare.txt
-        echo "--- GPU thread off (rendering in step with the emulated CPU):"
-        python3 .github/pcsx-test/compare_frames.py r original-azahar-sync patched-azahar-sync | tee -a r/compare.txt
+        for v in lit mask poly all; do
+          for t in '' -sync; do
+            echo "=== $v$t vs original$t" | tee -a r/compare.txt
+            python3 .github/pcsx-test/compare_frames.py r original-azahar$t $v-azahar$t | tee -a r/compare.txt
+          done
+        done
 
   # Test-only transport: artifact storage isn't reachable from where the
   # builds get tested, so put them on a throwaway orphan branch.

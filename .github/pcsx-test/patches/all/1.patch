@@ -1,36 +1,12 @@
 diff --git a/plugins/gpu_unai/gpu_inner.h b/plugins/gpu_unai/gpu_inner.h
-index b69a54a0..20011542 100644
+index b69a54a0..3a56c9fe 100644
 --- a/plugins/gpu_unai/gpu_inner.h
 +++ b/plugins/gpu_unai/gpu_inner.h
-@@ -448,6 +448,75 @@ endsprite:
+@@ -448,6 +448,51 @@ endsprite:
  
  #ifdef __arm__
  
 +#ifdef HAVE_ARMV6
-+// No mask bit set in the destination: the mask check would skip nothing.
-+static inline bool MaskClear(const le16_t *p_, u32 count)
-+{
-+	const u16 *p = (const u16 *)p_;
-+	u32 acc = 0;
-+	if (!count)
-+		return true;
-+	if ((uintptr_t)p & 2) {
-+		acc = *p++;
-+		count--;
-+	}
-+	const u32 *w = (const u32 *)p;
-+	for (; count >= 8; count -= 8, w += 4) {
-+		acc |= w[0] | w[1] | w[2] | w[3];
-+		if (acc & 0x80008000)
-+			return false;
-+	}
-+	for (; count >= 2; count -= 2)
-+		acc |= *w++;
-+	if (count)
-+		acc |= *(const u16 *)w;
-+	return !(acc & 0x80008000);
-+}
-+
 +// Sprite lighting depends only on the CLUT entry, so for bigger sprites light
 +// the CLUT once and draw with the unlit loop. Not when lighting makes a
 +// nonzero entry 0, as the unlit loop takes 0 for transparent, nor when the
@@ -78,7 +54,7 @@ index b69a54a0..20011542 100644
  template<int CF>
  static void SpriteMaybeAsm(le16_t *pPixel, u32 count, const u8 *pTxt_base,
          const gpu_unai_inner_t &inn)
-@@ -471,11 +540,30 @@ static void SpriteMaybeAsm(le16_t *pPixel, u32 count, const u8 *pTxt_base,
+@@ -471,11 +516,30 @@ static void SpriteMaybeAsm(le16_t *pPixel, u32 count, const u8 *pTxt_base,
      case 0x40: sprite_driver_8bpp_l0_std_asm(pPixel, pTxt, count, &inn); return;
      case 0x42: sprite_driver_8bpp_l0_st0_asm(pPixel, pTxt, count, &inn); return;
  #ifdef HAVE_ARMV6
@@ -113,11 +89,35 @@ index b69a54a0..20011542 100644
      case 0x4b: sprite_driver_8bpp_l1_st1_asm(pPixel, pTxt, count, &inn); return;
  #endif
      }
-@@ -485,6 +573,33 @@ static void SpriteMaybeAsm(le16_t *pPixel, u32 count, const u8 *pTxt_base,
+@@ -485,6 +549,57 @@ static void SpriteMaybeAsm(le16_t *pPixel, u32 count, const u8 *pTxt_base,
  }
  #endif // __arm__
  
 +#ifdef HAVE_ARMV6
++// No mask bit set in the destination: the mask check would skip nothing.
++static inline bool MaskClear(const le16_t *p_, u32 count)
++{
++	const u16 *p = (const u16 *)p_;
++	u32 acc = 0;
++	if (!count)
++		return true;
++	if ((uintptr_t)p & 2) {
++		acc = *p++;
++		count--;
++	}
++	const u32 *w = (const u32 *)p;
++	for (; count >= 8; count -= 8, w += 4) {
++		acc |= w[0] | w[1] | w[2] | w[3];
++		if (acc & 0x80008000)
++			return false;
++	}
++	for (; count >= 2; count -= 2)
++		acc |= *w++;
++	if (count)
++		acc |= *(const u16 *)w;
++	return !(acc & 0x80008000);
++}
++
 +// as PolyHasAsm
 +static constexpr bool SpriteHasAsm(int cf)
 +{
@@ -196,7 +196,99 @@ index b69a54a0..20011542 100644
  
  // this tries to avoid pointer shifting
  #define DITHER_LKUP(lut, dst) \
-@@ -783,6 +901,26 @@ static void PolySpanMaybeAsm(const gpu_unai_t &gpu_unai, le16_t *pDst, u32 count
+@@ -743,6 +861,60 @@ endpolytext:
+ }
+ 
+ #ifdef __arm__
++#ifdef HAVE_ARMV6
++// Flat lighting depends only on the CLUT entry, so light the CLUT once per
++// primitive and draw its spans with the unlit asm. Rebuilt when the
++// primitive, CLUT or light changes; not used for a span that draws over
++// the CLUT, or when lighting makes a nonzero entry 0.
++u32 poly_lit_clut_serial;
++
++static noinline const le16_t *PolyLitClut(const gpu_unai_inner_t &inn,
++	const le16_t *pDst, u32 count, int bpp)
++{
++	static const u32 idx4[2] = { 0x76543210, 0xfedcba98 };
++	static u8 idx8[256] __attribute__((aligned(4)));
++	static le16_t lut[256] __attribute__((aligned(32)));
++	static struct { const le16_t *cba; u32 rgb, serial; int bpp; bool ok; } c;
++	int i, n = bpp == 4 ? 16 : 256;
++
++	if (inn.CBA < pDst + count && pDst < inn.CBA + n) {
++		c.cba = NULL;
++		return NULL;
++	}
++	if (c.cba == inn.CBA && c.rgb == inn.bgr0888 && c.bpp == bpp
++	    && c.serial == poly_lit_clut_serial)
++		return c.ok ? lut : NULL;
++	if (count < 8)
++		return NULL;
++
++	gpu_unai_inner_t li = inn;
++	li.TBA = (le16_t *)(bpp == 4 ? (const void *)idx4 : (const void *)idx8);
++	li.u = 0;
++	li.v = 0;
++	li.u_inc = 1 << 10;
++	li.v_inc = 0;
++	li.mask_v00u = 0xff;
++	memset(lut, 0, n * sizeof(lut[0]));
++	if (bpp == 4)
++		poly_4bp_l1d0m0std_asm(lut, &li, n);
++	else {
++		if (!idx8[255])
++			for (i = 0; i < 256; i++)
++				idx8[i] = i;
++		poly_8bp_l1d0m0std_asm(lut, &li, n);
++	}
++	c.ok = true;
++	for (i = 0; i < n; i++)
++		if (!le16_raw(lut[i]) && le16_raw(inn.CBA[i]))
++			c.ok = false;
++	c.cba = inn.CBA;
++	c.rgb = inn.bgr0888;
++	c.bpp = bpp;
++	c.serial = poly_lit_clut_serial;
++	return c.ok ? lut : NULL;
++}
++#endif
++
+ template<int CF>
+ static void PolySpanMaybeAsm(const gpu_unai_t &gpu_unai, le16_t *pDst, u32 count, s32 y)
+ {
+@@ -761,10 +933,26 @@ static void PolySpanMaybeAsm(const gpu_unai_t &gpu_unai, le16_t *pDst, u32 count
+ 	case 0x042: poly_8bp_l0d0m0st0_asm(pDst, &gpu_unai.inn, count); break;
+ #ifdef HAVE_ARMV6
+ 	case 0x012: poly_utx_l0d0m0st2_asm(pDst, &gpu_unai.inn, count); break;
+-	case 0x021: poly_4bp_l1d0m0std_asm(pDst, &gpu_unai.inn, count); break;
+-	case 0x023: poly_4bp_l1d0m0st0_asm(pDst, &gpu_unai.inn, count); break;
+-	case 0x041: poly_8bp_l1d0m0std_asm(pDst, &gpu_unai.inn, count); break;
+-	case 0x043: poly_8bp_l1d0m0st0_asm(pDst, &gpu_unai.inn, count); break;
++	case 0x021: case 0x023: case 0x041: case 0x043: {
++		const le16_t *lut = PolyLitClut(gpu_unai.inn, pDst, count, (CF & 0x60) == 0x20 ? 4 : 8);
++		if (lut) {
++			gpu_unai_inner_t li = gpu_unai.inn;
++			li.CBA = (le16_t *)lut;
++			switch (CF) {
++			case 0x021: poly_4bp_l0d0m0std_asm(pDst, &li, count); return;
++			case 0x023: poly_4bp_l0d0m0st0_asm(pDst, &li, count); return;
++			case 0x041: poly_8bp_l0d0m0std_asm(pDst, &li, count); return;
++			case 0x043: poly_8bp_l0d0m0st0_asm(pDst, &li, count); return;
++			}
++		}
++		switch (CF) {
++		case 0x021: poly_4bp_l1d0m0std_asm(pDst, &gpu_unai.inn, count); return;
++		case 0x023: poly_4bp_l1d0m0st0_asm(pDst, &gpu_unai.inn, count); return;
++		case 0x041: poly_8bp_l1d0m0std_asm(pDst, &gpu_unai.inn, count); return;
++		case 0x043: poly_8bp_l1d0m0st0_asm(pDst, &gpu_unai.inn, count); return;
++		}
++		break;
++	}
+ 	case 0x081: poly_utx_g1d0m0std_asm(pDst, &gpu_unai.inn, count); break;
+ 	case 0x0a1: poly_4bp_lgd0m0std_asm(pDst, &gpu_unai.inn, count); break;
+ 	case 0x0ab: poly_4bp_lgd0m0st1_asm(pDst, &gpu_unai.inn, count); break;
+@@ -783,6 +971,26 @@ static void PolySpanMaybeAsm(const gpu_unai_t &gpu_unai, le16_t *pDst, u32 count
  }
  #endif
  
@@ -223,7 +315,7 @@ index b69a54a0..20011542 100644
  static void PolyNULL(const gpu_unai_t &gpu_unai, le16_t *pDst, u32 count, s32 y)
  {
  	#ifdef ENABLE_GPU_LOG_SUPPORT
-@@ -804,42 +942,44 @@ typedef void (*PP)(const gpu_unai_t &gpu_unai, le16_t *pDst, u32 count, s32 y);
+@@ -804,42 +1012,44 @@ typedef void (*PP)(const gpu_unai_t &gpu_unai, le16_t *pDst, u32 count, s32 y);
  #endif
  #ifdef HAVE_ARMV6
  #define TA6(cf) PolySpanMaybeAsm<(cf)>
@@ -300,10 +392,24 @@ index b69a54a0..20011542 100644
  
  const PP gpuPolySpanDrivers[1024] = {
  	TIBLOCK(0<<8), TIBLOCK(1<<8), TIBLOCK(2<<8), TIBLOCK(3<<8)
-@@ -850,5 +990,6 @@ const PP gpuPolySpanDrivers[1024] = {
+@@ -850,5 +1060,6 @@ const PP gpuPolySpanDrivers[1024] = {
  #undef TIBLOCK
  #undef TA
  #undef TA6
 +#undef TM6
  
  #endif /* __GPU_UNAI_GPU_INNER_H__ */
+diff --git a/plugins/gpu_unai/gpulib_if.cpp b/plugins/gpu_unai/gpulib_if.cpp
+index 4b9b57e6..437e2d84 100644
+--- a/plugins/gpu_unai/gpulib_if.cpp
++++ b/plugins/gpu_unai/gpulib_if.cpp
+@@ -247,6 +247,9 @@ int renderer_do_cmd_list(u32 *list_, int list_len, uint32_t *ex_regs,
+   {
+     cmd = le32_to_u32(*list) >> 24;
+     len = cmd_lengths[cmd];
++#if defined(__arm__) && defined(HAVE_ARMV6)
++    poly_lit_clut_serial++;
++#endif
+     if (list + 1 + len > list_end) {
+       cmd = -1;
+       break;
