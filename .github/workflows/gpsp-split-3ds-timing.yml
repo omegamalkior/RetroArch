@@ -44,6 +44,20 @@ jobs:
             ref: split/arm-mem-fastpath-block
           - name: all-combined
             ref: split/all-combined
+          - name: arm-cycle-check-adds
+            ref: split/arm-cycle-check-adds
+          - name: arm-cold-stub-return
+            ref: split/arm-cold-stub-return
+          - name: arm-cold-stub-rom-loads
+            ref: split/arm-cold-stub-rom-loads
+          - name: arm-cold-stub-io-loads
+            ref: split/arm-cold-stub-io-loads
+          - name: arm-io-first-rom-code
+            ref: split/arm-io-first-rom-code
+          - name: arm-blkmem-vram-rom
+            ref: split/arm-blkmem-vram-rom
+          - name: all-combined-2
+            ref: split/all-combined-2
     steps:
     - uses: actions/checkout@v4
 
